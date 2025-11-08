@@ -1,17 +1,35 @@
-import React from "react";
+// src/pages/Signup.jsx
+import React, { useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
+import { useNavigate, Link } from "react-router-dom";
 
 const Signup = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Account created successfully!");
+      navigate("/login");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-tr from-green-400 via-blue-500 to-indigo-900 flex items-center justify-center px-4">
       <div className="bg-white shadow-2xl rounded-2xl w-full max-w-md p-8">
-        {/* Title */}
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
           Create an Account
         </h2>
 
-        {/* Form */}
-        <form className="space-y-6">
-          {/* Name */}
+        <form className="space-y-6" onSubmit={handleSignup}>
+          {/* Full Name */}
           <div>
             <label className="block text-gray-700 text-sm font-semibold mb-2">
               Full Name
@@ -19,7 +37,9 @@ const Signup = () => {
             <input
               type="text"
               placeholder="Your Name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -31,7 +51,9 @@ const Signup = () => {
             <input
               type="email"
               placeholder="you@example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -43,24 +65,26 @@ const Signup = () => {
             <input
               type="password"
               placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Button */}
+          {/* Sign Up Button */}
           <button
-            type="button"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-200"
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg shadow-md transition"
           >
             Sign Up
           </button>
 
-          {/* Bottom Link */}
+          {/* Bottom link */}
           <p className="text-sm text-center text-gray-600 mt-4">
             Already have an account?{" "}
-            <a href="/login" className="text-indigo-600 hover:underline">
-              Login
-            </a>
+            <Link to="/login" className="text-indigo-600 hover:underline">
+              Login here
+            </Link>
           </p>
         </form>
       </div>

@@ -111,8 +111,16 @@ export const Navbar = () => {
             onClick={() => setIsMenuOpen(false)}
             className="block text-gray-300 hover:text-teal-400 text-center py-2"
           >
-            Add Movie
+            NearByServices
           </NavLink>
+          <NavLink
+            to="/"
+            onClick={() => setIsMenuOpen(false)}
+            className="block text-gray-300 hover:text-teal-400 text-center py-2"
+          >
+            About Us
+          </NavLink>
+
           {cookie ? (
             <button
               onClick={openDialog}
