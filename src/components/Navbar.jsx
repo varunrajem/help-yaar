@@ -40,7 +40,7 @@ export const Navbar = () => {
             NearByServices
           </NavLink>
           <NavLink
-            to="/aboutus"
+            to="/about"
             className={({ isActive }) =>
               `hover:text-teal-400 transition ${isActive ? "text-teal-400" : "text-gray-300"
               }`
@@ -107,14 +107,14 @@ export const Navbar = () => {
             Home
           </NavLink>
           <NavLink
-            to="/"
+            to="/nearbyservices"
             onClick={() => setIsMenuOpen(false)}
             className="block text-gray-300 hover:text-teal-400 text-center py-2"
           >
             NearByServices
           </NavLink>
           <NavLink
-            to="/"
+            to="/aboutus"
             onClick={() => setIsMenuOpen(false)}
             className="block text-gray-300 hover:text-teal-400 text-center py-2"
           >

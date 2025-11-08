@@ -17,7 +17,7 @@ function App() {
       <Suspense fallback={<div className="text-center mt-10">Loading...</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/aboutus" element={<About />} />
+          <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
         </Routes>
