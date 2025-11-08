@@ -1,9 +1,11 @@
-import React from 'react'
+import React from 'react';
 
 const Home = () => {
   return (
-    <div className="bg-blue-500 text-white p-36">Home</div>
-  )
-}
+    <div className="min-h-screen flex justify-center items-center bg-red-500 text-white">
+      Home Page
+    </div>
+  );
+};
 
-export default Home
+export default Home;

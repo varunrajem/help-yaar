@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
-import { BsPerson } from "react-icons/bs";
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import { BsPerson } from 'react-icons/bs';
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const cookie = false; // replace with your auth condition
+  const cookie = false; // replace with your auth state
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const openDialog = () => setIsDialogOpen(!isDialogOpen);
-  const signOut = () => alert("Signed out");
+  const signOut = () => alert('Signed out');
 
   return (
     <nav className="bg-black text-white shadow-lg fixed top-0 w-full z-50">
@@ -24,36 +24,22 @@ export const Navbar = () => {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `hover:text-teal-400 transition ${isActive ? "text-teal-400" : "text-gray-300"
-              }`
+              `hover:text-teal-400 transition ${isActive ? 'text-teal-400' : 'text-gray-300'}`
             }
           >
             Home
           </NavLink>
           <NavLink
-            to="/nearbyservices"
-            className={({ isActive }) =>
-              `hover:text-teal-400 transition ${isActive ? "text-teal-400" : "text-gray-300"
-              }`
-            }
-          >
-            NearByServices
-          </NavLink>
-          <NavLink
             to="/about"
             className={({ isActive }) =>
-              `hover:text-teal-400 transition ${isActive ? "text-teal-400" : "text-gray-300"
-              }`
+              `hover:text-teal-400 transition ${isActive ? 'text-teal-400' : 'text-gray-300'}`
             }
           >
             About Us
           </NavLink>
 
           {cookie ? (
-            <button
-              onClick={openDialog}
-              className="hover:text-teal-400 transition"
-            >
+            <button onClick={openDialog} className="hover:text-teal-400 transition">
               <BsPerson size={22} />
             </button>
           ) : (
@@ -71,12 +57,7 @@ export const Navbar = () => {
           onClick={toggleMenu}
           className="sm:hidden focus:outline-none hover:text-teal-400 transition"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isMenuOpen ? (
               <path
                 strokeLinecap="round"
@@ -85,12 +66,7 @@ export const Navbar = () => {
                 d="M6 18L18 6M6 6l12 12"
               />
             ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             )}
           </svg>
         </button>
@@ -107,20 +83,12 @@ export const Navbar = () => {
             Home
           </NavLink>
           <NavLink
-            to="/nearbyservices"
-            onClick={() => setIsMenuOpen(false)}
-            className="block text-gray-300 hover:text-teal-400 text-center py-2"
-          >
-            NearByServices
-          </NavLink>
-          <NavLink
-            to="/aboutus"
+            to="/about"
             onClick={() => setIsMenuOpen(false)}
             className="block text-gray-300 hover:text-teal-400 text-center py-2"
           >
             About Us
           </NavLink>
-
           {cookie ? (
             <button
               onClick={openDialog}
