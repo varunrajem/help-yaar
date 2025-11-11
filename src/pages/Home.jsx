@@ -1,5 +1,5 @@
-// src/pages/Home.jsx
 import React from "react";
+import { useNavigate } from "react-router-dom"; // import hook
 import {
   FaTools, FaBook, FaMotorcycle, FaBolt, FaLaptopCode, FaPaintBrush,
   FaDumbbell, FaBroom, FaCar, FaBaby, FaUtensils, FaDog
@@ -24,13 +24,15 @@ const services = [
 ];
 
 const Home = () => {
+  const navigate = useNavigate(); // initialize navigate
+
   const handleCategorySelect = (categoryName) => {
     console.log("Selected category:", categoryName);
-    // TODO: Firestore + location logic
+    navigate(`/service/${categoryName}`); // now it will redirect
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-tl from-green-400 via-blue-500 to-indigo-900 px-4 py-10 mt-12">
+    <div className="min-h-screen bg-gradient-to-tl from-green-400 via-blue-500 to-indigo-900 px-4 py-10 mt-12">
       <div className="max-w-7xl mx-auto text-white">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {services.map((service) => (
