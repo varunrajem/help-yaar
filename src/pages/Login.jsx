@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,20 +15,20 @@ const Login = () => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("Logged in successfully!");
-      navigate("/");
+      toast.success("🎉 Logged in successfully!");
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      alert("Google login successful!");
-      navigate("/");
+      toast.success("✅ Google login successful!");
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     }
   };
 
@@ -112,6 +114,18 @@ const Login = () => {
           </form>
         </div>
       </div>
+
+      {/* Toast Container on side */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
     </div>
   );
 };
