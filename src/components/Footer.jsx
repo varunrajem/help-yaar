@@ -20,8 +20,8 @@ export const Footer = () => {
           <h3 className="text-lg font-semibold text-white mb-3">Quick Links</h3>
           <ul className="space-y-2">
             <li><a href="/" className="hover:text-green-400 transition">Home</a></li>
-            <li><a href="/services" className="hover:text-green-400 transition">Nearby Services</a></li>
-            <li><a href="/addservice" className="hover:text-green-400 transition">Offer Help</a></li>
+            <li><a href="/" className="hover:text-green-400 transition">Nearby Services</a></li>
+            <li><a href="/" className="hover:text-green-400 transition">Offer Help</a></li>
             <li><a href="/about" className="hover:text-green-400 transition">About Us</a></li>
           </ul>
         </div>
@@ -33,10 +33,10 @@ export const Footer = () => {
             Email: <a href="mailto:support@helpyar.com" className="text-green-400 hover:underline">support@helpyar.com</a>
           </p>
           <p className="text-sm mt-2">
-            Phone: <a href="tel:+919999999999" className="text-green-400 hover:underline">+91 99999 99999</a>
+            Phone: <a href="tel:+919473965542" className="text-green-400 hover:underline">+919473965542</a>
           </p>
           <p className="text-sm mt-2">
-            Location: Pune, Maharashtra, India
+            Location: Greater Noida, India
           </p>
         </div>
 
