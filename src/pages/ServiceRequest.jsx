@@ -3,39 +3,46 @@ import { useParams } from "react-router-dom";
 import { db, auth } from "../firebase";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
-const API_KEY = "AIzaSyBfUxvHP50YgPKunL8F2oAs9_fOJkJK6Vc"; // Replace with your key
-
-// Convert lat/lng to city name
+/* ================= Reverse Geocoding (OSM) ================= */
 const reverseGeocodeCity = async (lat, lng) => {
   try {
     const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${API_KEY}`
+      `/osm/reverse?format=json&lat=${lat}&lon=${lng}`
     );
+
     const data = await res.json();
-    console.log("Geocoding API response:", data);
+    console.log("OSM response:", data);
 
-    if (data.results && data.results[0] && data.results[0].address_components) {
-      // Find the city/locality component
-      const cityComponent = data.results[0].address_components.find((comp) =>
-        comp.types.includes("locality")
-      );
-      console.log(cityComponent)
-      if (cityComponent) return cityComponent.long_name;
-
-      // If no city, return formatted address
-      return data.results[0].formatted_address || "Unknown location";
-    }
-    return "Unknown location";
-  } catch (error) {
-    console.error("Reverse geocoding error:", error);
-    return "Unknown location";
+    return {
+      displayName: data.display_name || "Unknown location",
+      district:
+        data.address?.state_district ||
+        data.address?.county ||
+        "Unknown district",
+      city:
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.village ||
+        ""
+    };
+  } catch (err) {
+    console.error("OSM error:", err);
+    return {
+      displayName: "Unknown location",
+      district: "Unknown district",
+      city: ""
+    };
   }
 };
 
-// Get helpers that match category + area name safely
-const getHelpersByCategoryAndLocation = async (category, address) => {
+/* ================= Firestore Helpers ================= */
+const getHelpersByCategoryAndLocation = async (category, city) => {
   try {
-    const q = query(collection(db, "helpers"), where("service", "==", category));
+    const q = query(
+      collection(db, "helpers"),
+      where("service", "==", category)
+    );
+
     const snapshot = await getDocs(q);
 
     return snapshot.docs
@@ -43,7 +50,7 @@ const getHelpersByCategoryAndLocation = async (category, address) => {
       .filter((h) => {
         if (!h.available) return false;
         if (!h.location || typeof h.location !== "string") return false;
-        return address.toLowerCase().includes(h.location.toLowerCase());
+        return city.toLowerCase().includes(h.location.toLowerCase());
       });
   } catch (error) {
     console.error("Error fetching helpers:", error);
@@ -51,7 +58,7 @@ const getHelpersByCategoryAndLocation = async (category, address) => {
   }
 };
 
-// Send user request to helper
+/* ================= Send Request ================= */
 const sendRequestToHelper = async (helperId, userId, category, coords) => {
   try {
     await addDoc(collection(db, "requests"), {
@@ -60,73 +67,90 @@ const sendRequestToHelper = async (helperId, userId, category, coords) => {
       category,
       location: coords,
       status: "pending",
-      createdAt: new Date(),
+      createdAt: new Date()
     });
     alert("Request sent successfully!");
   } catch (error) {
     console.error("Error sending request:", error);
-    alert("Failed to send request. Try again.");
+    alert("Failed to send request.");
   }
 };
 
+/* ================= MAIN COMPONENT ================= */
 const ServiceRequest = () => {
   const { categoryName } = useParams();
   const userId = auth.currentUser?.uid;
 
-  const [location, setLocation] = useState(null);
-  const [city, setCity] = useState(""); // store city instead of full address
+  const [coords, setCoords] = useState(null);
+  const [displayName, setDisplayName] = useState("");
+  const [district, setDistrict] = useState("");
+  const [city, setCity] = useState("");
   const [availableHelpers, setAvailableHelpers] = useState([]);
   const [showPopup, setShowPopup] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const handleAllowLocation = async () => {
+  /* ---------- Allow Location ---------- */
+  const handleAllowLocation = () => {
     setLoading(true);
     setShowPopup(false);
-    console.log("📍 Requesting location access...");
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        console.log("✅ Got coordinates:", coords);
-        setLocation(coords);
+        const userCoords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        console.log("✅ Coordinates:", userCoords);
+        setCoords(userCoords);
 
-        const detectedCity = await reverseGeocodeCity(coords.lat, coords.lng);
-        console.log("✅ Detected city:", detectedCity);
-        setCity(detectedCity);
+        const locationData = await reverseGeocodeCity(
+          userCoords.lat,
+          userCoords.lng
+        );
+        console.log("📍 Resolved location:", locationData);
 
-        const helpers = await getHelpersByCategoryAndLocation(categoryName, detectedCity);
-        console.log("✅ Found helpers:", helpers);
+        setDisplayName(locationData.displayName);
+        setDistrict(locationData.district);
+        setCity(locationData.city);
+
+        const helpers = await getHelpersByCategoryAndLocation(
+          categoryName,
+          locationData.city
+        );
+
         setAvailableHelpers(helpers);
-
         setLoading(false);
       },
       (err) => {
         console.error("❌ Location error:", err);
-        alert("Location access denied or unavailable.");
+        alert("Location access denied.");
         setLoading(false);
         setShowPopup(true);
       }
     );
   };
 
+  /* ---------- Deny Location ---------- */
+  const handleDenyLocation = () => {
+    setShowPopup(false);
+    setLoading(false);
+  };
+
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gradient-to-tl from-green-400 via-blue-500 to-indigo-900 text-white p-6 mt-12 relative">
 
-      {/* --- City Display --- */}
-      {city && !showPopup && (
-        <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-md text-sm">
-          📍 {city}
-        </div>
-      )}
-
-      {/* --- Custom Popup --- */}
+      {/* ================= CENTER POPUP ================= */}
       {showPopup && (
-        <div className="absolute inset-0 bg-black/60 flex justify-center items-center z-50">
-          <div className="bg-white text-black rounded-2xl p-6 w-80 text-center shadow-lg">
-            <h2 className="text-xl font-bold mb-3">Location Access Required</h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="bg-white text-black rounded-2xl p-6 w-80 text-center shadow-xl">
+            <h2 className="text-xl font-bold mb-3">
+              Location Access Required
+            </h2>
             <p className="text-gray-700 mb-5">
-              To find helpers for {categoryName}, please allow location access.
+              To find helpers for <b>{categoryName}</b>, please allow location access.
             </p>
+
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleAllowLocation}
@@ -134,8 +158,9 @@ const ServiceRequest = () => {
               >
                 Allow
               </button>
+
               <button
-                onClick={() => setShowPopup(false)}
+                onClick={handleDenyLocation}
                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
               >
                 Deny
@@ -145,30 +170,54 @@ const ServiceRequest = () => {
         </div>
       )}
 
-      {/* --- Main Content --- */}
+      {/* ================= LOCATION BADGE ================= */}
+      {district && !showPopup && (
+        <div className="absolute top-4 right-4 group">
+          {/* Default (district only) */}
+          <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full shadow-md text-sm cursor-pointer max-w-xs truncate">
+            📍 {district}
+          </div>
+
+          {/* Hover (full address) */}
+          <div className="hidden group-hover:block absolute right-0 mt-2 bg-black/80 text-white text-xs p-3 rounded-lg w-80 shadow-lg">
+            {displayName}
+          </div>
+        </div>
+      )}
+
+      {/* ================= MAIN CONTENT ================= */}
       {loading ? (
-        <p className="text-center text-lg mt-20">Detecting your location...</p>
+        <p className="text-center text-lg mt-20">
+          Detecting your location...
+        </p>
       ) : (
         !showPopup && (
           <>
-            <h2 className="text-3xl font-bold mb-3 text-center">{categoryName} Helpers</h2>
-            <p className="text-center mb-6 text-lg opacity-80">
-              Searching for helpers in your area...
-            </p>
+            <h2 className="text-3xl font-bold mb-6 text-center">
+              {categoryName} Helpers
+            </h2>
 
             {availableHelpers.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableHelpers.map((helper) => (
                   <div
                     key={helper.id}
-                    className="bg-white/20 p-4 rounded text-white border border-white/30 shadow-md"
+                    className="bg-white/20 p-4 rounded border border-white/30 shadow-md"
                   >
-                    <h2 className="font-bold text-lg">{helper.name || "Unnamed"}</h2>
+                    <h2 className="font-bold text-lg">
+                      {helper.name || "Unnamed"}
+                    </h2>
                     <p>Service: {helper.service}</p>
                     <p>Area: {helper.location}</p>
+
                     <button
                       onClick={() =>
-                        sendRequestToHelper(helper.id, userId, categoryName, location)
+                        sendRequestToHelper(
+                          helper.id,
+                          userId,
+                          categoryName,
+                          coords
+                        )
                       }
                       className="mt-3 bg-yellow-300 text-black px-3 py-2 rounded hover:bg-yellow-400"
                     >
