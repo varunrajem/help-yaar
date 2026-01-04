@@ -7,7 +7,7 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 const reverseGeocodeCity = async (lat, lng) => {
   try {
     const res = await fetch(
-      `/osm/reverse?format=json&lat=${lat}&lon=${lng}`
+      `/api/reverse-geocode?lat=${lat}&lon=${lng}`
     );
 
     const data = await res.json();
@@ -34,6 +34,8 @@ const reverseGeocodeCity = async (lat, lng) => {
     };
   }
 };
+
+
 
 /* ================= Firestore Helpers ================= */
 const getHelpersByCategoryAndLocation = async (category, city) => {
