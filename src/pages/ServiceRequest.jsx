@@ -3,15 +3,11 @@ import { useParams } from "react-router-dom";
 import { db, auth } from "../firebase";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
-/* ================= Reverse Geocoding (OSM) ================= */
+/* ================= Reverse Geocoding ================= */
 const reverseGeocodeCity = async (lat, lng) => {
   try {
-    const res = await fetch(
-      `/api/reverse-geocode?lat=${lat}&lon=${lng}`
-    );
-
+    const res = await fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`);
     const data = await res.json();
-    console.log("OSM response:", data);
 
     return {
       displayName: data.display_name || "Unknown location",
@@ -35,30 +31,55 @@ const reverseGeocodeCity = async (lat, lng) => {
   }
 };
 
-
-
 /* ================= Firestore Helpers ================= */
-const getHelpersByCategoryAndLocation = async (category, city) => {
+const getHelpersByCategoryAndLocation = async (category, city, district) => {
   try {
+    console.log("Selected category:", category);
+
     const q = query(
       collection(db, "helpers"),
-      where("service", "==", category)
+      where("service", "==", category),
+      where("available", "==", true)
     );
 
     const snapshot = await getDocs(q);
+    console.log("Total helpers in category:", snapshot.size);
 
-    return snapshot.docs
+    // normalize user location words
+    const userLocationText = `${city} ${district}`.toLowerCase();
+    const userWords = userLocationText
+      .replace(/,/g, "")
+      .split(" ")
+      .filter(Boolean);
+
+    console.log("User address (for matching):", city);
+    console.log("User words:", userWords);
+
+    const matchedHelpers = snapshot.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
       .filter((h) => {
-        if (!h.available) return false;
-        if (!h.location || typeof h.location !== "string") return false;
-        return city.toLowerCase().includes(h.location.toLowerCase());
+        if (!h.address) return false;
+
+        const helperAddress = h.address
+          .toLowerCase()
+          .replace(/,/g, "");
+
+        // ✅ match if ANY user word exists in address
+        return userWords.some((word) =>
+          helperAddress.includes(word)
+        );
       });
+
+    console.log("Helpers after location match:", matchedHelpers.length);
+    console.log("Matched helpers list:", matchedHelpers);
+
+    return matchedHelpers;
   } catch (error) {
     console.error("Error fetching helpers:", error);
     return [];
   }
 };
+
 
 /* ================= Send Request ================= */
 const sendRequestToHelper = async (helperId, userId, category, coords) => {
@@ -102,14 +123,13 @@ const ServiceRequest = () => {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
         };
-        console.log("✅ Coordinates:", userCoords);
+
         setCoords(userCoords);
 
         const locationData = await reverseGeocodeCity(
           userCoords.lat,
           userCoords.lng
         );
-        console.log("📍 Resolved location:", locationData);
 
         setDisplayName(locationData.displayName);
         setDistrict(locationData.district);
@@ -117,14 +137,14 @@ const ServiceRequest = () => {
 
         const helpers = await getHelpersByCategoryAndLocation(
           categoryName,
-          locationData.city
+          locationData.city,
+          locationData.district
         );
 
         setAvailableHelpers(helpers);
         setLoading(false);
       },
-      (err) => {
-        console.error("❌ Location error:", err);
+      () => {
         alert("Location access denied.");
         setLoading(false);
         setShowPopup(true);
@@ -132,85 +152,68 @@ const ServiceRequest = () => {
     );
   };
 
-  /* ---------- Deny Location ---------- */
-  const handleDenyLocation = () => {
-    setShowPopup(false);
-    setLoading(false);
-  };
-
   /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-gradient-to-tl from-green-400 via-blue-500 to-indigo-900 text-white p-6 mt-12 relative">
+    <div className="min-h-screen bg-gradient-to-tl from-green-400 via-blue-500 to-indigo-900 
+      text-white px-4 sm:px-6 pt-28 pb-10 relative">
 
-      {/* ================= CENTER POPUP ================= */}
+      {/* ===== Location Popup ===== */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
           <div className="bg-white text-black rounded-2xl p-6 w-80 text-center shadow-xl">
-            <h2 className="text-xl font-bold mb-3">
-              Location Access Required
-            </h2>
+            <h2 className="text-xl font-bold mb-3">Location Access Required</h2>
             <p className="text-gray-700 mb-5">
-              To find helpers for <b>{categoryName}</b>, please allow location access.
+              To find helpers for <b>{categoryName}</b>, allow location access.
             </p>
-
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={handleAllowLocation}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                Allow
-              </button>
-
-              <button
-                onClick={handleDenyLocation}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Deny
-              </button>
-            </div>
+            <button
+              onClick={handleAllowLocation}
+              className="bg-green-500 text-white w-full py-3 rounded-xl font-semibold"
+            >
+              Allow Location
+            </button>
           </div>
         </div>
       )}
 
-      {/* ================= LOCATION BADGE ================= */}
-      {district && !showPopup && (
-        <div className="absolute top-4 right-4 group">
-          {/* Default (district only) */}
-          <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full shadow-md text-sm cursor-pointer max-w-xs truncate">
-            📍 {district}
-          </div>
-
-          {/* Hover (full address) */}
-          <div className="hidden group-hover:block absolute right-0 mt-2 bg-black/80 text-white text-xs p-3 rounded-lg w-80 shadow-lg">
-            {displayName}
+      {/* ===== Location Badge ===== */}
+      {(city || district) && !showPopup && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-40">
+          <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-full 
+            shadow-md text-xs sm:text-sm max-w-[90vw] truncate">
+            📍 {city ? `${city}, ` : ""}{district}
           </div>
         </div>
       )}
 
-      {/* ================= MAIN CONTENT ================= */}
+      {/* ===== Main Content ===== */}
       {loading ? (
-        <p className="text-center text-lg mt-20">
-          Detecting your location...
-        </p>
+        <p className="text-center text-lg mt-20">Detecting your location...</p>
       ) : (
         !showPopup && (
           <>
-            <h2 className="text-3xl font-bold mb-6 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
               {categoryName} Helpers
             </h2>
 
             {availableHelpers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {availableHelpers.map((helper) => (
                   <div
                     key={helper.id}
-                    className="bg-white/20 p-4 rounded border border-white/30 shadow-md"
+                    className="bg-white/20 backdrop-blur-md p-5 rounded-2xl 
+                    shadow-lg border border-white/20"
                   >
-                    <h2 className="font-bold text-lg">
+                    <h2 className="font-bold text-lg sm:text-xl mb-1">
                       {helper.name || "Unnamed"}
                     </h2>
-                    <p>Service: {helper.service}</p>
-                    <p>Area: {helper.location}</p>
+
+                    <p className="text-sm opacity-90">
+                      Service: {helper.service}
+                    </p>
+
+                    <p className="text-sm opacity-80 mt-1">
+                      {helper.address}
+                    </p>
 
                     <button
                       onClick={() =>
@@ -221,7 +224,8 @@ const ServiceRequest = () => {
                           coords
                         )
                       }
-                      className="mt-3 bg-yellow-300 text-black px-3 py-2 rounded hover:bg-yellow-400"
+                      className="mt-4 w-full bg-yellow-400 text-black py-3 
+                      rounded-xl font-semibold active:scale-95 transition"
                     >
                       Send Request
                     </button>
