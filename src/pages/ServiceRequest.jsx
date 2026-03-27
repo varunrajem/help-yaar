@@ -6,7 +6,9 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 /* ================= Reverse Geocoding ================= */
 const reverseGeocodeCity = async (lat, lng) => {
   try {
-    const res = await fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
     const data = await res.json();
 
     return {
@@ -14,7 +16,7 @@ const reverseGeocodeCity = async (lat, lng) => {
       district:
         data.address?.state_district ||
         data.address?.county ||
-        "Unknown district",
+        "",
       city:
         data.address?.city ||
         data.address?.town ||
@@ -25,7 +27,7 @@ const reverseGeocodeCity = async (lat, lng) => {
     console.error("OSM error:", err);
     return {
       displayName: "Unknown location",
-      district: "Unknown district",
+      district: "",
       city: ""
     };
   }
@@ -45,14 +47,14 @@ const getHelpersByCategoryAndLocation = async (category, city, district) => {
     const snapshot = await getDocs(q);
     console.log("Total helpers in category:", snapshot.size);
 
-    // normalize user location words
-    const userLocationText = `${city} ${district}`.toLowerCase();
+    // 👉 Prepare user words
+    const userLocationText = `${city || ""} ${district || ""}`.toLowerCase();
+
     const userWords = userLocationText
       .replace(/,/g, "")
       .split(" ")
-      .filter(Boolean);
+      .filter((w) => w.length > 3); // ignore small words
 
-    console.log("User address (for matching):", city);
     console.log("User words:", userWords);
 
     const matchedHelpers = snapshot.docs
@@ -60,18 +62,24 @@ const getHelpersByCategoryAndLocation = async (category, city, district) => {
       .filter((h) => {
         if (!h.address) return false;
 
-        const helperAddress = h.address
+        const helperWords = h.address
           .toLowerCase()
-          .replace(/,/g, "");
+          .replace(/,/g, "")
+          .split(" ")
+          .filter((w) => w.length > 3);
 
-        // ✅ match if ANY user word exists in address
+        console.log("Helper words:", helperWords);
+
+        // ✅ Smart matching
         return userWords.some((word) =>
-          helperAddress.includes(word)
+          helperWords.some(
+            (hWord) =>
+              hWord.includes(word) || word.includes(hWord)
+          )
         );
       });
 
-    console.log("Helpers after location match:", matchedHelpers.length);
-    console.log("Matched helpers list:", matchedHelpers);
+    console.log("Matched helpers:", matchedHelpers);
 
     return matchedHelpers;
   } catch (error) {
@@ -80,9 +88,13 @@ const getHelpersByCategoryAndLocation = async (category, city, district) => {
   }
 };
 
-
 /* ================= Send Request ================= */
 const sendRequestToHelper = async (helperId, userId, category, coords) => {
+  if (!userId) {
+    alert("Please login first");
+    return;
+  }
+
   try {
     await addDoc(collection(db, "requests"), {
       helperId,
@@ -92,6 +104,7 @@ const sendRequestToHelper = async (helperId, userId, category, coords) => {
       status: "pending",
       createdAt: new Date()
     });
+
     alert("Request sent successfully!");
   } catch (error) {
     console.error("Error sending request:", error);
@@ -187,7 +200,9 @@ const ServiceRequest = () => {
 
       {/* ===== Main Content ===== */}
       {loading ? (
-        <p className="text-center text-lg mt-20">Detecting your location...</p>
+        <p className="text-center text-lg mt-20">
+          📍 Detecting your location...
+        </p>
       ) : (
         !showPopup && (
           <>

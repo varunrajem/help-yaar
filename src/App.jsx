@@ -9,6 +9,7 @@ const About = lazy(() => import('./pages/About'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const ServiceRequest = lazy(() => import('./pages/ServiceRequest'));
+const BeHelper = lazy(() => import('./pages/BeHelper'));
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/service/:categoryName" element={<ServiceRequest />} />
+          <Route path="/be-helper" element={<BeHelper />} />
         </Routes>
       </Suspense>
       <Footer />

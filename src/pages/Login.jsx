@@ -15,7 +15,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success("🎉 Logged in successfully!");
+      toast.success("Logged in successfully!");
       setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       toast.error(error.message);
@@ -25,7 +25,7 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success("✅ Google login successful!");
+      toast.success("Google login successful!");
       setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       toast.error(error.message);
@@ -34,11 +34,26 @@ const Login = () => {
 
   return (
     <div className="h-full bg-gradient-to-tl from-green-400 to-indigo-900 w-full py-12 px-4">
+
+      {/* 🔥 Top Right Button */}
+      <div className="flex justify-end m-4">
+        <button
+          onClick={() => navigate("/be-helper")}
+          className="text-white bg-gradient-to-r from-yellow-400 to-orange-500 px-5 py-2 rounded-full 
+          font-semibold shadow-lg hover:scale-105 transition"
+        >
+          🚀 Become a Helper
+        </button>
+      </div>
+
+      {/* Main Content */}
       <div className="flex flex-col items-center justify-center">
-        <div className="bg-white shadow rounded lg:w-1/3 md:w-1/2 w-full p-10 mt-16">
+        <div className="bg-white shadow rounded lg:w-1/3 md:w-1/2 w-full p-10 mt-2">
+
           <p className="text-2xl font-extrabold leading-6 text-gray-800">
             Login to Help-Yaar
           </p>
+
           <p className="text-sm mt-4 text-gray-500">
             Don’t have an account?{" "}
             <Link
@@ -115,15 +130,10 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Toast Container on side */}
+      {/* Toast */}
       <ToastContainer
         position="top-right"
         autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnHover
-        draggable
         theme="colored"
       />
     </div>
