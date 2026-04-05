@@ -48,27 +48,7 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen bg-gray-100">
 
       {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-blue-600 to-indigo-700 text-white p-6">
-        <h2 className="text-2xl font-bold mb-10">Admin Panel</h2>
 
-        <ul className="space-y-6">
-          <li onClick={() => navigate("/admin/dashboard")} className="flex items-center gap-3 cursor-pointer">
-            <FaHome /> Dashboard
-          </li>
-
-          <li onClick={() => navigate("/admin/verify-helpers")} className="flex items-center gap-3 cursor-pointer">
-            <FaUserCheck /> Verify Helpers
-          </li>
-
-          <li onClick={() => navigate("/")} className="flex items-center gap-3 cursor-pointer">
-            <FaUsers /> Website
-          </li>
-        </ul>
-
-        <button onClick={handleLogout} className="mt-12 bg-red-500 px-4 py-2 rounded-lg w-full">
-          Logout
-        </button>
-      </div>
 
       {/* Main */}
       <div className="flex-1 p-8">

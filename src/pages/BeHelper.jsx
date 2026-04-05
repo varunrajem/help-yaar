@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { db } from "../firebase";
+import { db, storage } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const BeHelper = () => {
   const [form, setForm] = useState({
@@ -11,7 +12,9 @@ const BeHelper = () => {
   });
 
   const [preview, setPreview] = useState(null);
+  const [file, setFile] = useState(null); // ✅ store actual file
   const [fileName, setFileName] = useState("No file chosen");
+  const [loading, setLoading] = useState(false);
 
   // handle input change
   const handleChange = (e) => {
@@ -21,12 +24,14 @@ const BeHelper = () => {
     });
   };
 
-  // handle image preview
+  // handle image preview + store file
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-      setFileName(file.name);
+    const selectedFile = e.target.files[0];
+
+    if (selectedFile) {
+      setFile(selectedFile); // ✅ store file
+      setPreview(URL.createObjectURL(selectedFile)); // preview only
+      setFileName(selectedFile.name);
     }
   };
 
@@ -38,9 +43,26 @@ const BeHelper = () => {
     }
 
     try {
+      setLoading(true);
+
+      let imageUrl = "";
+
+      // ✅ Upload image to Firebase Storage
+      if (file) {
+        const storageRef = ref(
+          storage,
+          `helpers/${Date.now()}_${file.name}`
+        );
+
+        await uploadBytes(storageRef, file);
+
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      // ✅ Save in Firestore
       await addDoc(collection(db, "helperRequests"), {
         ...form,
-        image: preview, // ⚠️ later replace with Firebase Storage URL
+        image: imageUrl, // 🔥 FIXED
         status: "pending",
         createdAt: serverTimestamp(),
       });
@@ -54,22 +76,24 @@ const BeHelper = () => {
         address: "",
         service: "",
       });
+
       setPreview(null);
+      setFile(null);
       setFileName("No file chosen");
 
     } catch (error) {
       console.error(error);
       alert("Something went wrong!");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-blue-500 to-purple-700 flex items-center justify-center px-4">
 
-      {/* Card */}
       <div className="backdrop-blur-lg bg-white/90 w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-white/30 m-20">
 
-        {/* Title */}
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-1">
           Become a Helper 🚀
         </h2>
@@ -79,16 +103,11 @@ const BeHelper = () => {
 
         <div className="space-y-5">
 
-          {/* IMAGE UPLOAD */}
+          {/* IMAGE */}
           <div className="flex flex-col items-center">
-
             <div className="w-28 h-28 rounded-full bg-gray-200 overflow-hidden mb-3 border-4 border-indigo-200 shadow">
               {preview ? (
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="w-full h-full object-cover"
-                />
+                <img src={preview} className="w-full h-full object-cover" />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-400 text-xs">
                   Upload
@@ -169,16 +188,17 @@ const BeHelper = () => {
           {/* BUTTON */}
           <button
             onClick={handleSubmit}
+            disabled={loading}
             className="w-full bg-gradient-to-r from-green-400 to-emerald-500 
             text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-105 transition"
           >
-            Submit Request
+            {loading ? "Submitting..." : "Submit Request"}
           </button>
 
         </div>
 
         <p className="text-xs text-gray-400 text-center mt-6">
-          Your request will be reviewed by admin before approval. Visit Nearest Help-Yaar HUB for approval.
+          Your request will be reviewed by admin before approval.
         </p>
 
       </div>

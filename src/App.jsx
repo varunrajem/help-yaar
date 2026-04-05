@@ -8,6 +8,7 @@ import AdminLogin from "./Admin/AdminLogin";
 import AdminDashboard from "./Admin/AdminDashboard";
 import VerifyHelpers from "./Admin/VerifyHelpers";
 
+
 // Lazy imports
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
@@ -28,7 +29,7 @@ function App() {
       >
         <Routes>
 
-          {/* 🌐 USER ROUTES (WITH NAVBAR + FOOTER) */}
+          {/* Main Website */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -38,11 +39,13 @@ function App() {
             <Route path="/be-helper" element={<BeHelper />} />
           </Route>
 
-          {/* 🔐 ADMIN ROUTES (NO NAVBAR) */}
-          <Route element={<AdminLayout />}>
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/verify-helpers" element={<VerifyHelpers />} />
+          {/* ✅ Admin Login (NO sidebar) */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* ✅ Admin Layout (WITH sidebar) */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="verify-helpers" element={<VerifyHelpers />} />
           </Route>
 
         </Routes>

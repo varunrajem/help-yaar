@@ -11,8 +11,10 @@ import {
 
 const VerifyHelpers = () => {
   const [helpers, setHelpers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchHelpers = async () => {
+    setLoading(true);
     try {
       const q = query(
         collection(db, "helperRequests"),
@@ -30,6 +32,8 @@ const VerifyHelpers = () => {
 
     } catch (error) {
       console.error("Error fetching helpers:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,56 +55,83 @@ const VerifyHelpers = () => {
     fetchHelpers();
   };
 
+  // ✅ Safe Image Handler
+  const getImageSrc = (image) => {
+    if (!image) return "/default.png";
+    if (image.startsWith("http")) return image;
+    return "/default.png";
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div>
 
-      <h1 className="text-3xl font-bold mb-6">
-        Verify Helpers
-      </h1>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">
+          Verify Helpers
+        </h1>
 
-      {helpers.length === 0 ? (
-        <p className="text-gray-500">No pending helper requests</p>
+        <span className="bg-yellow-100 text-yellow-700 px-4 py-1 rounded-full text-sm font-medium">
+          {helpers.length} Pending
+        </span>
+      </div>
+
+      {/* Loading */}
+      {loading ? (
+        <div className="text-center mt-20 text-gray-500 text-lg">
+          Loading helpers...
+        </div>
+      ) : helpers.length === 0 ? (
+        <div className="text-center mt-20 text-gray-500">
+          <p className="text-lg">No pending helper requests 🚀</p>
+        </div>
       ) : (
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
           {helpers.map((h) => (
-            <div key={h.id} className="bg-white p-5 rounded-xl shadow">
+            <div
+              key={h.id}
+              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition duration-300"
+            >
 
-              {/* Image */}
-              <div className="flex justify-center">
+              {/* Profile */}
+              <div className="flex items-center gap-4">
                 <img
-                  src={h.image || "/default.png"}
+                  src={getImageSrc(h.image)}
                   alt="helper"
-                  className="w-24 h-24 rounded-full object-cover border"
+                  onError={(e) => (e.target.src = "/default.png")}
+                  className="w-16 h-16 rounded-full object-cover border"
                 />
+
+                <div>
+                  <h2 className="font-semibold text-lg text-gray-800">
+                    {h.name}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {h.service}
+                  </p>
+                </div>
               </div>
 
               {/* Info */}
-              <h2 className="text-center font-bold mt-3 text-lg">
-                {h.name}
-              </h2>
-
-              <p className="text-center text-sm text-gray-600">
-                {h.service}
-              </p>
-
-              <div className="mt-3 text-sm space-y-1">
-                <p><strong>📞 Phone:</strong> {h.phone}</p>
-                <p><strong>📍 Address:</strong> {h.address}</p>
+              <div className="mt-4 text-sm text-gray-600 space-y-1">
+                <p>📞 {h.phone}</p>
+                <p>📍 {h.address}</p>
               </div>
 
               {/* Buttons */}
-              <div className="flex gap-3 mt-5">
+              <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => approveHelper(h.id)}
-                  className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg w-full"
+                  className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg w-full font-medium transition"
                 >
                   Approve
                 </button>
 
                 <button
                   onClick={() => rejectHelper(h.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg w-full"
+                  className="bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg w-full font-medium transition"
                 >
                   Reject
                 </button>
