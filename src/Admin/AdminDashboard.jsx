@@ -3,7 +3,7 @@ import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { FaUsers, FaUserCheck, FaClock, FaHome } from "react-icons/fa";
+import { FaUsers, FaUserCheck, FaClock } from "react-icons/fa";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -19,58 +19,59 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        // Total Helpers (optional if using helpers collection)
-        const helperSnapshot = await getDocs(collection(db, "helpers"));
-        setTotalHelpers(helperSnapshot.size);
+      const helperSnapshot = await getDocs(collection(db, "helpers"));
+      setTotalHelpers(helperSnapshot.size);
 
-        // ✅ Pending Helper Requests
-        const pendingQuery = query(
-          collection(db, "helperRequests"),
-          where("status", "==", "pending")
-        );
-        const pendingSnapshot = await getDocs(pendingQuery);
-        setPendingHelpers(pendingSnapshot.size);
+      const pendingQuery = query(
+        collection(db, "helperRequests"),
+        where("status", "==", "pending")
+      );
+      const pendingSnapshot = await getDocs(pendingQuery);
+      setPendingHelpers(pendingSnapshot.size);
 
-        // Total Users
-        const userSnapshot = await getDocs(collection(db, "users"));
-        setTotalUsers(userSnapshot.size);
-
-      } catch (error) {
-        console.error("Error:", error);
-      }
+      const userSnapshot = await getDocs(collection(db, "users"));
+      setTotalUsers(userSnapshot.size);
     };
 
     fetchData();
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      {/* Sidebar */}
+      </div>
 
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Total Helpers */}
+        <div
+          onClick={() => navigate("/admin/helpers")}
+          className="bg-blue-500 text-white p-6 rounded-xl cursor-pointer hover:scale-105 transition shadow-lg"
+        >
+          <h3 className="flex items-center gap-2 text-lg">
+            <FaUserCheck /> Total Helpers
+          </h3>
+          <p className="text-3xl font-bold mt-2">{totalHelpers}</p>
+        </div>
 
-      {/* Main */}
-      <div className="flex-1 p-8">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        {/* Pending Requests */}
+        <div
+          onClick={() => navigate("/admin/verify-helpers")}
+          className="bg-yellow-500 text-white p-6 rounded-xl cursor-pointer hover:scale-105 transition shadow-lg"
+        >
+          <h3 className="flex items-center gap-2 text-lg">
+            <FaClock /> Pending Requests
+          </h3>
+          <p className="text-3xl font-bold mt-2">{pendingHelpers}</p>
+        </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-
-          <div className="bg-blue-500 text-white p-6 rounded-xl">
-            <h3>Total Helpers</h3>
-            <p className="text-3xl font-bold">{totalHelpers}</p>
-          </div>
-
-          <div className="bg-yellow-500 text-white p-6 rounded-xl">
-            <h3>Pending Helper Requests</h3>
-            <p className="text-3xl font-bold">{pendingHelpers}</p>
-          </div>
-
-          <div className="bg-green-500 text-white p-6 rounded-xl">
-            <h3>Users</h3>
-            <p className="text-3xl font-bold">{totalUsers}</p>
-          </div>
-
+        {/* Users */}
+        <div className="bg-green-500 text-white p-6 rounded-xl shadow-lg">
+          <h3 className="flex items-center gap-2 text-lg">
+            <FaUsers /> Users
+          </h3>
+          <p className="text-3xl font-bold mt-2">{totalUsers}</p>
         </div>
       </div>
     </div>

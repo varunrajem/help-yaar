@@ -7,7 +7,7 @@ import AdminLayout from "./layout/AdminLayout";
 import AdminLogin from "./Admin/AdminLogin";
 import AdminDashboard from "./Admin/AdminDashboard";
 import VerifyHelpers from "./Admin/VerifyHelpers";
-
+import HelpersList from "./Admin/HelpersList";
 
 // Lazy imports
 const Home = lazy(() => import("./pages/Home"));
@@ -46,6 +46,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="verify-helpers" element={<VerifyHelpers />} />
+            <Route path="/admin/helpers" element={<HelpersList />} />
           </Route>
 
         </Routes>

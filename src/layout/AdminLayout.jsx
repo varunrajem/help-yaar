@@ -14,10 +14,10 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f1f5f9]">
+    <div className="bg-[#f1f5f9] min-h-screen">
 
-      {/* 🔥 Sidebar */}
-      <div className="w-64 bg-[#0f172a] text-gray-300 p-6 flex flex-col justify-between shadow-xl">
+      {/* 🔥 Sidebar (FIXED) */}
+      <div className="fixed top-0 left-0 h-screen w-64 bg-[#0f172a] text-gray-300 p-6 flex flex-col justify-between shadow-xl">
 
         {/* Top */}
         <div>
@@ -27,39 +27,36 @@ const AdminLayout = () => {
 
           <ul className="space-y-3">
 
-            {/* Dashboard */}
             <li
               onClick={() => navigate("/admin/dashboard")}
-              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200
+              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition
               ${location.pathname === "/admin/dashboard"
                   ? "bg-[#1e293b] text-white"
                   : "hover:bg-[#1e293b] hover:text-white"
                 }`}
             >
-              <FaHome className="text-lg" />
-              <span>Dashboard</span>
+              <FaHome />
+              Dashboard
             </li>
 
-            {/* Verify Helpers */}
             <li
               onClick={() => navigate("/admin/verify-helpers")}
-              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200
+              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition
               ${location.pathname === "/admin/verify-helpers"
                   ? "bg-[#1e293b] text-white"
                   : "hover:bg-[#1e293b] hover:text-white"
                 }`}
             >
-              <FaUserCheck className="text-lg" />
-              <span>Verify Helpers</span>
+              <FaUserCheck />
+              Verify Helpers
             </li>
 
-            {/* Website */}
             <li
               onClick={() => navigate("/")}
-              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#1e293b] hover:text-white transition-all duration-200"
+              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-[#1e293b] hover:text-white transition"
             >
-              <FaUsers className="text-lg" />
-              <span>Website</span>
+              <FaUsers />
+              Website
             </li>
 
           </ul>
@@ -68,14 +65,14 @@ const AdminLayout = () => {
         {/* Bottom */}
         <button
           onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-all duration-200 shadow-md"
+          className="bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition"
         >
           Logout
         </button>
       </div>
 
-      {/* 📄 Page Content */}
-      <div className="flex-1 p-8">
+      {/* 📄 Content (SCROLLABLE) */}
+      <div className="ml-64 p-8 overflow-y-auto min-h-screen">
         <Outlet />
       </div>
 
