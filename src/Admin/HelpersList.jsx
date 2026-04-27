@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
+import { db, storage } from "../firebase";
 import {
   collection,
   getDocs,
@@ -7,13 +7,14 @@ import {
   deleteDoc,
   updateDoc,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const HelpersList = () => {
   const [helpers, setHelpers] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [newImage, setNewImage] = useState(null);
 
-  // 🔥 Fetch Helpers
   const fetchHelpers = async () => {
     const snapshot = await getDocs(collection(db, "helpers"));
     const list = snapshot.docs.map((doc) => ({
@@ -29,9 +30,7 @@ const HelpersList = () => {
 
   // 🗑 DELETE
   const deleteHelper = async (id) => {
-    const confirmDelete = window.confirm("Delete this helper?");
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Delete this helper?")) return;
     await deleteDoc(doc(db, "helpers", id));
     fetchHelpers();
   };
@@ -40,16 +39,39 @@ const HelpersList = () => {
   const startEdit = (helper) => {
     setEditingId(helper.id);
     setEditData(helper);
+    setNewImage(null);
+  };
+
+  // 📸 HANDLE IMAGE CHANGE
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImage(file);
+    }
   };
 
   // 💾 SAVE EDIT
   const saveEdit = async () => {
+    let imageUrl = editData.image || "";
+
+    // 🔥 upload new image if selected
+    if (newImage) {
+      const storageRef = ref(
+        storage,
+        `helpers/${Date.now()}_${newImage.name}`
+      );
+
+      await uploadBytes(storageRef, newImage);
+      imageUrl = await getDownloadURL(storageRef);
+    }
+
     await updateDoc(doc(db, "helpers", editingId), {
       name: editData.name,
-      email: editData.email, // ✅ added
+      email: editData.email,
       phone: editData.phone,
       service: editData.service,
       address: editData.address,
+      image: imageUrl, // ✅ updated image
     });
 
     setEditingId(null);
@@ -68,7 +90,8 @@ const HelpersList = () => {
           >
             {editingId === helper.id ? (
               <>
-                {/* EDIT MODE */}
+                {/* 📝 EDIT MODE */}
+
                 <input
                   value={editData.name}
                   onChange={(e) =>
@@ -114,6 +137,14 @@ const HelpersList = () => {
                   placeholder="Address"
                 />
 
+                {/* 📸 CHANGE IMAGE */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full mb-2 text-sm"
+                />
+
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={saveEdit}
@@ -132,26 +163,22 @@ const HelpersList = () => {
               </>
             ) : (
               <>
-                {/* VIEW MODE */}
-                <h3 className="text-lg font-semibold">
-                  {helper.name}
-                </h3>
+                {/* 👀 VIEW MODE */}
 
-                <p className="text-gray-400">
-                  📧 {helper.email}
-                </p>
+                {helper.image && (
+                  <img
+                    src={helper.image}
+                    alt="helper"
+                    className="w-full h-40 object-cover rounded-lg mb-3"
+                  />
+                )}
 
-                <p className="text-gray-400">
-                  📞 {helper.phone}
-                </p>
+                <h3 className="text-lg font-semibold">{helper.name}</h3>
 
-                <p className="text-gray-400">
-                  🛠 {helper.service}
-                </p>
-
-                <p className="text-gray-400">
-                  📍 {helper.address}
-                </p>
+                <p className="text-gray-400">📧 {helper.email}</p>
+                <p className="text-gray-400">📞 {helper.phone}</p>
+                <p className="text-gray-400">🛠 {helper.service}</p>
+                <p className="text-gray-400">📍 {helper.address}</p>
 
                 <div className="flex gap-3 mt-4">
                   <button

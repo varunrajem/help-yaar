@@ -36,7 +36,9 @@ const Login = () => {
     <div className="h-full bg-gradient-to-tl from-green-400 to-indigo-900 w-full py-12 px-4">
 
       {/* 🔥 Top Right Button */}
-      <div className="flex justify-end m-4">
+      <div className="flex justify-end m-4 gap-3">
+
+        {/* Become Helper */}
         <button
           onClick={() => navigate("/be-helper")}
           className="text-white bg-gradient-to-r from-yellow-400 to-orange-500 px-5 py-2 rounded-full 
@@ -44,6 +46,16 @@ const Login = () => {
         >
           🚀 Become a Helper
         </button>
+
+        {/* ✅ NEW: Helper Login Button */}
+        <button
+          onClick={() => navigate("/helper-login")}
+          className="text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-5 py-2 rounded-full 
+          font-semibold shadow-lg hover:scale-105 transition"
+        >
+          🧑‍🔧 Login as Helper
+        </button>
+
       </div>
 
       {/* Main Content */}
@@ -131,11 +143,7 @@ const Login = () => {
       </div>
 
       {/* Toast */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme="colored"
-      />
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
     </div>
   );
 };

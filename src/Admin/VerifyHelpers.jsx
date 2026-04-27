@@ -64,7 +64,7 @@ const VerifyHelpers = () => {
     try {
       setProcessingId(helper.id);
 
-      // 🔥 Store in helpers collection using EMAIL as ID
+      // 🔥 Move to helpers collection using EMAIL as ID
       await setDoc(doc(db, "helpers", helper.email), {
         name: helper.name || "",
         email: helper.email || "",
@@ -73,16 +73,19 @@ const VerifyHelpers = () => {
         address: helper.address || "",
         image: helper.image || "",
         verified: true,
+        status: "approved", // ✅ added
         createdAt: helper.createdAt || new Date(),
       });
 
       // ❌ Remove from requests
       await deleteDoc(doc(db, "helperRequests", helper.id));
 
+      alert("✅ Helper approved successfully!");
+
       fetchHelpers();
     } catch (error) {
       console.error("Error approving helper:", error);
-      alert("Failed to approve helper");
+      alert("❌ Failed to approve helper");
     } finally {
       setProcessingId(null);
     }
@@ -94,6 +97,8 @@ const VerifyHelpers = () => {
       setProcessingId(id);
 
       await deleteDoc(doc(db, "helperRequests", id));
+
+      alert("❌ Helper request rejected");
 
       fetchHelpers();
     } catch (error) {
@@ -159,11 +164,11 @@ const VerifyHelpers = () => {
             key={helper.id}
             className="bg-gray-900 border border-gray-800 p-5 rounded-xl shadow"
           >
+
             <h3 className="text-xl font-semibold mb-2">
               {helper.name}
             </h3>
 
-            {/* ✅ EMAIL */}
             <p className="text-gray-400 text-sm">
               📧 {helper.email}
             </p>
@@ -180,6 +185,7 @@ const VerifyHelpers = () => {
               📍 {helper.address}
             </p>
 
+            {/* ✅ Image */}
             {helper.image && (
               <img
                 src={helper.image}
@@ -208,6 +214,7 @@ const VerifyHelpers = () => {
                 Reject
               </button>
             </div>
+
           </div>
         ))}
       </div>

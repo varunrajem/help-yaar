@@ -9,8 +9,11 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
 
 const BeHelper = () => {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -69,7 +72,7 @@ const BeHelper = () => {
 
       if (!snapshot.empty) {
         alert("You have already applied. Please wait for approval.");
-        setLoading(false);
+        navigate("/login"); // 🔥 redirect
         return;
       }
 
@@ -98,7 +101,10 @@ const BeHelper = () => {
         createdAt: serverTimestamp(),
       });
 
-      alert("Request submitted for approval!");
+      alert("Request submitted for approval! Now Login as Helper");
+
+      // 🔥 Redirect to login
+      navigate("/login");
 
       // 🔄 Reset form
       setForm({
@@ -136,7 +142,7 @@ const BeHelper = () => {
 
         <div className="space-y-5">
 
-          {/* 🖼 IMAGE */}
+          {/* IMAGE */}
           <div className="flex flex-col items-center">
             <div className="w-28 h-28 rounded-full bg-gray-200 overflow-hidden mb-3 border-4 border-indigo-200 shadow">
               {preview ? (
@@ -166,7 +172,7 @@ const BeHelper = () => {
             <p className="text-xs text-gray-500 mt-2">{fileName}</p>
           </div>
 
-          {/* 🧾 INPUTS */}
+          {/* INPUTS */}
           <div className="space-y-4">
 
             <input
@@ -227,7 +233,7 @@ const BeHelper = () => {
 
           </div>
 
-          {/* 🔘 BUTTON */}
+          {/* BUTTON */}
           <button
             onClick={handleSubmit}
             disabled={loading}

@@ -16,6 +16,8 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ServiceRequest = lazy(() => import("./pages/ServiceRequest"));
 const BeHelper = lazy(() => import("./pages/BeHelper"));
+const HelperLogin = lazy(() => import("./pages/HelperLogin"));
+const HelperDashboard = lazy(() => import("./pages/HelperDashboard"));
 
 function App() {
   return (
@@ -37,10 +39,13 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/service/:categoryName" element={<ServiceRequest />} />
             <Route path="/be-helper" element={<BeHelper />} />
+            <Route path="/helper-login" element={<HelperLogin />} />
+
           </Route>
 
           {/* ✅ Admin Login (NO sidebar) */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/helper-dashboard" element={<HelperDashboard />} />
 
           {/* ✅ Admin Layout (WITH sidebar) */}
           <Route path="/admin" element={<AdminLayout />}>
