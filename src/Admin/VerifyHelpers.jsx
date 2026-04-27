@@ -64,17 +64,19 @@ const VerifyHelpers = () => {
     try {
       setProcessingId(helper.id);
 
-      // 1️⃣ Add to helpers collection
-      await setDoc(doc(db, "helpers", helper.id), {
+      // 🔥 Store in helpers collection using EMAIL as ID
+      await setDoc(doc(db, "helpers", helper.email), {
         name: helper.name || "",
+        email: helper.email || "",
         phone: helper.phone || "",
         service: helper.service || "",
         address: helper.address || "",
+        image: helper.image || "",
         verified: true,
         createdAt: helper.createdAt || new Date(),
       });
 
-      // 2️⃣ Remove from requests
+      // ❌ Remove from requests
       await deleteDoc(doc(db, "helperRequests", helper.id));
 
       fetchHelpers();
@@ -104,6 +106,7 @@ const VerifyHelpers = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-6">
+
       {/* Header */}
       <h2 className="text-3xl font-bold mb-6">
         New Helper Requests
@@ -111,6 +114,7 @@ const VerifyHelpers = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
+
         {/* Category */}
         <select
           value={category}
@@ -159,16 +163,32 @@ const VerifyHelpers = () => {
               {helper.name}
             </h3>
 
+            {/* ✅ EMAIL */}
+            <p className="text-gray-400 text-sm">
+              📧 {helper.email}
+            </p>
+
             <p className="text-gray-400 text-sm">
               📞 {helper.phone}
             </p>
+
             <p className="text-gray-400 text-sm">
               🛠 {helper.service}
             </p>
+
             <p className="text-gray-400 text-sm">
               📍 {helper.address}
             </p>
 
+            {helper.image && (
+              <img
+                src={helper.image}
+                alt="helper"
+                className="w-full h-40 object-cover rounded-lg mt-3"
+              />
+            )}
+
+            {/* Buttons */}
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => approveHelper(helper)}

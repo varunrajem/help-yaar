@@ -13,6 +13,7 @@ const HelpersList = () => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
+  // 🔥 Fetch Helpers
   const fetchHelpers = async () => {
     const snapshot = await getDocs(collection(db, "helpers"));
     const list = snapshot.docs.map((doc) => ({
@@ -45,6 +46,7 @@ const HelpersList = () => {
   const saveEdit = async () => {
     await updateDoc(doc(db, "helpers", editingId), {
       name: editData.name,
+      email: editData.email, // ✅ added
       phone: editData.phone,
       service: editData.service,
       address: editData.address,
@@ -66,12 +68,23 @@ const HelpersList = () => {
           >
             {editingId === helper.id ? (
               <>
+                {/* EDIT MODE */}
                 <input
                   value={editData.name}
                   onChange={(e) =>
                     setEditData({ ...editData, name: e.target.value })
                   }
                   className="w-full mb-2 p-2 rounded bg-gray-800"
+                  placeholder="Name"
+                />
+
+                <input
+                  value={editData.email}
+                  onChange={(e) =>
+                    setEditData({ ...editData, email: e.target.value })
+                  }
+                  className="w-full mb-2 p-2 rounded bg-gray-800"
+                  placeholder="Email"
                 />
 
                 <input
@@ -80,6 +93,7 @@ const HelpersList = () => {
                     setEditData({ ...editData, phone: e.target.value })
                   }
                   className="w-full mb-2 p-2 rounded bg-gray-800"
+                  placeholder="Phone"
                 />
 
                 <input
@@ -88,6 +102,7 @@ const HelpersList = () => {
                     setEditData({ ...editData, service: e.target.value })
                   }
                   className="w-full mb-2 p-2 rounded bg-gray-800"
+                  placeholder="Service"
                 />
 
                 <input
@@ -96,6 +111,7 @@ const HelpersList = () => {
                     setEditData({ ...editData, address: e.target.value })
                   }
                   className="w-full mb-2 p-2 rounded bg-gray-800"
+                  placeholder="Address"
                 />
 
                 <div className="flex gap-2 mt-2">
@@ -116,10 +132,26 @@ const HelpersList = () => {
               </>
             ) : (
               <>
-                <h3 className="text-lg font-semibold">{helper.name}</h3>
-                <p className="text-gray-400">📞 {helper.phone}</p>
-                <p className="text-gray-400">🛠 {helper.service}</p>
-                <p className="text-gray-400">📍 {helper.address}</p>
+                {/* VIEW MODE */}
+                <h3 className="text-lg font-semibold">
+                  {helper.name}
+                </h3>
+
+                <p className="text-gray-400">
+                  📧 {helper.email}
+                </p>
+
+                <p className="text-gray-400">
+                  📞 {helper.phone}
+                </p>
+
+                <p className="text-gray-400">
+                  🛠 {helper.service}
+                </p>
+
+                <p className="text-gray-400">
+                  📍 {helper.address}
+                </p>
 
                 <div className="flex gap-3 mt-4">
                   <button

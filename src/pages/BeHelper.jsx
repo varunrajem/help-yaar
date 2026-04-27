@@ -1,22 +1,30 @@
 import React, { useState } from "react";
 import { db, storage } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const BeHelper = () => {
   const [form, setForm] = useState({
     name: "",
+    email: "",
     phone: "",
     address: "",
     service: "",
   });
 
   const [preview, setPreview] = useState(null);
-  const [file, setFile] = useState(null); // ✅ store actual file
+  const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("No file chosen");
   const [loading, setLoading] = useState(false);
 
-  // handle input change
+  // 🔄 Handle input change
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -24,20 +32,26 @@ const BeHelper = () => {
     });
   };
 
-  // handle image preview + store file
+  // 🖼 Handle image upload
   const handleImageChange = (e) => {
     const selectedFile = e.target.files[0];
 
     if (selectedFile) {
-      setFile(selectedFile); // ✅ store file
-      setPreview(URL.createObjectURL(selectedFile)); // preview only
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
       setFileName(selectedFile.name);
     }
   };
 
-  // submit form
+  // 🚀 Submit form
   const handleSubmit = async () => {
-    if (!form.name || !form.phone || !form.address || !form.service) {
+    if (
+      !form.name ||
+      !form.email ||
+      !form.phone ||
+      !form.address ||
+      !form.service
+    ) {
       alert("Please fill all fields");
       return;
     }
@@ -45,9 +59,23 @@ const BeHelper = () => {
     try {
       setLoading(true);
 
+      // 🔍 Check duplicate request
+      const q = query(
+        collection(db, "helperRequests"),
+        where("email", "==", form.email)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        alert("You have already applied. Please wait for approval.");
+        setLoading(false);
+        return;
+      }
+
       let imageUrl = "";
 
-      // ✅ Upload image to Firebase Storage
+      // 📤 Upload image
       if (file) {
         const storageRef = ref(
           storage,
@@ -55,23 +83,27 @@ const BeHelper = () => {
         );
 
         await uploadBytes(storageRef, file);
-
         imageUrl = await getDownloadURL(storageRef);
       }
 
-      // ✅ Save in Firestore
+      // 💾 Save to Firestore
       await addDoc(collection(db, "helperRequests"), {
-        ...form,
-        image: imageUrl, // 🔥 FIXED
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        service: form.service,
+        image: imageUrl,
         status: "pending",
         createdAt: serverTimestamp(),
       });
 
       alert("Request submitted for approval!");
 
-      // reset form
+      // 🔄 Reset form
       setForm({
         name: "",
+        email: "",
         phone: "",
         address: "",
         service: "",
@@ -97,13 +129,14 @@ const BeHelper = () => {
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-1">
           Become a Helper 🚀
         </h2>
+
         <p className="text-center text-gray-500 mb-6 text-sm">
           Start earning by helping people nearby
         </p>
 
         <div className="space-y-5">
 
-          {/* IMAGE */}
+          {/* 🖼 IMAGE */}
           <div className="flex flex-col items-center">
             <div className="w-28 h-28 rounded-full bg-gray-200 overflow-hidden mb-3 border-4 border-indigo-200 shadow">
               {preview ? (
@@ -133,7 +166,7 @@ const BeHelper = () => {
             <p className="text-xs text-gray-500 mt-2">{fileName}</p>
           </div>
 
-          {/* INPUTS */}
+          {/* 🧾 INPUTS */}
           <div className="space-y-4">
 
             <input
@@ -141,6 +174,15 @@ const BeHelper = () => {
               name="name"
               placeholder="Full Name"
               value={form.name}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400 outline-none"
+            />
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={form.email}
               onChange={handleChange}
               className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400 outline-none"
             />
@@ -185,7 +227,7 @@ const BeHelper = () => {
 
           </div>
 
-          {/* BUTTON */}
+          {/* 🔘 BUTTON */}
           <button
             onClick={handleSubmit}
             disabled={loading}
