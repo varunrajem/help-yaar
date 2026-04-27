@@ -4,9 +4,8 @@ import {
   collection,
   getDocs,
   doc,
-  updateDoc,
+  deleteDoc,
   setDoc,
-  getDoc,
   query,
   where,
   orderBy,
@@ -17,8 +16,9 @@ const VerifyHelpers = () => {
   const [category, setCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   const [loading, setLoading] = useState(false);
+  const [processingId, setProcessingId] = useState(null);
 
-  // 🔥 Fetch Helpers
+  // 🔥 Fetch Pending Requests
   const fetchHelpers = async () => {
     try {
       setLoading(true);
@@ -36,61 +36,80 @@ const VerifyHelpers = () => {
         ...doc.data(),
       }));
 
-      // ✅ FRONTEND FILTER (FIXED ISSUE)
+      // ✅ Filter by category
       const filtered = list.filter((helper) => {
         if (category === "all") return true;
+
         return (
-          helper.service?.toLowerCase() === category.toLowerCase()
+          helper.service &&
+          helper.service.toLowerCase().trim() ===
+          category.toLowerCase().trim()
         );
       });
 
       setHelpers(filtered);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching helpers:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔁 Auto update
   useEffect(() => {
     fetchHelpers();
   }, [category, sortOrder]);
 
-  // ✅ Approve
+  // ✅ APPROVE HELPER
   const approveHelper = async (helper) => {
-    await updateDoc(doc(db, "helperRequests", helper.id), {
-      status: "approved",
-    });
+    try {
+      setProcessingId(helper.id);
 
-    const helperRef = doc(db, "helpers", helper.id);
-    const existing = await getDoc(helperRef);
-
-    if (!existing.exists()) {
-      await setDoc(helperRef, {
-        ...helper,
+      // 1️⃣ Add to helpers collection
+      await setDoc(doc(db, "helpers", helper.id), {
+        name: helper.name || "",
+        phone: helper.phone || "",
+        service: helper.service || "",
+        address: helper.address || "",
         verified: true,
+        createdAt: helper.createdAt || new Date(),
       });
-    }
 
-    fetchHelpers();
+      // 2️⃣ Remove from requests
+      await deleteDoc(doc(db, "helperRequests", helper.id));
+
+      fetchHelpers();
+    } catch (error) {
+      console.error("Error approving helper:", error);
+      alert("Failed to approve helper");
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  // ❌ Reject
+  // ❌ REJECT HELPER
   const rejectHelper = async (id) => {
-    await updateDoc(doc(db, "helperRequests", id), {
-      status: "rejected",
-    });
+    try {
+      setProcessingId(id);
 
-    fetchHelpers();
+      await deleteDoc(doc(db, "helperRequests", id));
+
+      fetchHelpers();
+    } catch (error) {
+      console.error("Error rejecting helper:", error);
+      alert("Failed to reject helper");
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-6">
       {/* Header */}
-      <h2 className="text-3xl font-bold mb-6">New Helper Requests</h2>
+      <h2 className="text-3xl font-bold mb-6">
+        New Helper Requests
+      </h2>
 
-      {/* 🔥 Filters */}
+      {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
         {/* Category */}
         <select
@@ -115,44 +134,56 @@ const VerifyHelpers = () => {
         </select>
       </div>
 
-      {/* 🔄 Loading */}
+      {/* Loading */}
       {loading && (
-        <p className="text-gray-400 mb-4">Loading requests...</p>
+        <p className="text-gray-400 mb-4">
+          Loading requests...
+        </p>
       )}
 
-      {/* ❌ Empty */}
+      {/* Empty */}
       {!loading && helpers.length === 0 && (
         <div className="text-gray-400 text-center mt-20">
           No matching requests
         </div>
       )}
 
-      {/* ✅ Cards */}
+      {/* Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {helpers.map((helper) => (
           <div
             key={helper.id}
-            className="bg-gray-900 border border-gray-800 p-5 rounded-xl shadow hover:shadow-lg transition"
+            className="bg-gray-900 border border-gray-800 p-5 rounded-xl shadow"
           >
             <h3 className="text-xl font-semibold mb-2">
               {helper.name}
             </h3>
 
-            <p className="text-gray-400 text-sm">📞 {helper.phone}</p>
-            <p className="text-gray-400 text-sm">🛠 {helper.service}</p>
-            <p className="text-gray-400 text-sm">📍 {helper.address}</p>
+            <p className="text-gray-400 text-sm">
+              📞 {helper.phone}
+            </p>
+            <p className="text-gray-400 text-sm">
+              🛠 {helper.service}
+            </p>
+            <p className="text-gray-400 text-sm">
+              📍 {helper.address}
+            </p>
 
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => approveHelper(helper)}
-                className="flex-1 bg-green-600 hover:bg-green-700 py-1.5 rounded"
+                disabled={processingId === helper.id}
+                className="flex-1 bg-green-600 hover:bg-green-700 py-1.5 rounded disabled:opacity-50"
               >
-                Approve
+                {processingId === helper.id
+                  ? "Processing..."
+                  : "Approve"}
               </button>
 
               <button
                 onClick={() => rejectHelper(helper.id)}
-                className="flex-1 bg-red-600 hover:bg-red-700 py-1.5 rounded"
+                disabled={processingId === helper.id}
+                className="flex-1 bg-red-600 hover:bg-red-700 py-1.5 rounded disabled:opacity-50"
               >
                 Reject
               </button>
