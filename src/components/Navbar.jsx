@@ -7,21 +7,40 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [user, setUser] = useState(null); // 🔥 real user
+  const [user, setUser] = useState(null);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const openDialog = () => setIsDialogOpen(!isDialogOpen);
 
-  // 🔥 Listen for auth state
   useEffect(() => {
+    let logoutTimer;
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+
+      // 🔥 Clear previous timer
+      if (logoutTimer) clearTimeout(logoutTimer);
+
+      if (currentUser) {
+        // ⏳ Auto logout after 1 minute
+        logoutTimer = setTimeout(async () => {
+          try {
+            await signOut(auth);
+            alert("Session expired! Logged out automatically.");
+          } catch (error) {
+            console.error("Auto logout error:", error);
+          }
+        }, 60000); // change time here
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (logoutTimer) clearTimeout(logoutTimer);
+    };
   }, []);
 
-  // 🔥 Logout
+  // 🔥 Manual Logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -34,7 +53,7 @@ export const Navbar = () => {
   return (
     <nav className="bg-black text-white shadow-lg fixed top-0 w-full z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        
+
         {/* Logo */}
         <NavLink to="/" className="flex items-center space-x-2">
           <span className="text-2xl font-bold text-teal-400">Help Yaar</span>
@@ -42,7 +61,7 @@ export const Navbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden sm:flex space-x-6 items-center">
-          
+
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -64,7 +83,7 @@ export const Navbar = () => {
           {/* 🔥 USER LOGIC */}
           {user ? (
             <div className="relative">
-              
+
               {/* 👤 USER NAME */}
               <button
                 onClick={openDialog}
@@ -108,7 +127,7 @@ export const Navbar = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="sm:hidden bg-black border-t border-gray-700 py-3 space-y-2">
-          
+
           <NavLink to="/" className="block text-center py-2">Home</NavLink>
           <NavLink to="/about" className="block text-center py-2">About</NavLink>
 
