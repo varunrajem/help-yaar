@@ -24,7 +24,7 @@ const About = () => {
           <h2 className="text-3xl font-bold mb-4 text-white">Our Mission</h2>
           <p className="text-gray-200 leading-relaxed">
             We aim to make helping each other simple, quick, and accessible.
-            “Help Yaar” (or NearbyMate) was created to encourage kindness and community
+            “Help Yaar” was created to encourage kindness and community
             bonding through technology. Whether you need a helping hand, a small favor, or
             just want to support someone nearby — we make it happen easily.
           </p>
@@ -37,7 +37,6 @@ const About = () => {
           What Makes Us Special
         </h2>
         <div className="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Feature 1 */}
           <div className="bg-white/20 rounded-2xl shadow-lg hover:shadow-2xl p-6 text-center transition-all duration-300 hover:scale-105">
             <FaUsers className="text-5xl text-green-300 mx-auto mb-4" />
             <h3 className="font-semibold text-lg mb-2 text-white">Community Driven</h3>
@@ -46,7 +45,6 @@ const About = () => {
             </p>
           </div>
 
-          {/* Feature 2 */}
           <div className="bg-white/20 rounded-2xl shadow-lg hover:shadow-2xl p-6 text-center transition-all duration-300 hover:scale-105">
             <FaMapMarkedAlt className="text-5xl text-blue-300 mx-auto mb-4" />
             <h3 className="font-semibold text-lg mb-2 text-white">Location-Based Help</h3>
@@ -55,7 +53,6 @@ const About = () => {
             </p>
           </div>
 
-          {/* Feature 3 */}
           <div className="bg-white/20 rounded-2xl shadow-lg hover:shadow-2xl p-6 text-center transition-all duration-300 hover:scale-105">
             <FaLightbulb className="text-5xl text-yellow-300 mx-auto mb-4" />
             <h3 className="font-semibold text-lg mb-2 text-white">Smart & Simple</h3>
@@ -64,7 +61,6 @@ const About = () => {
             </p>
           </div>
 
-          {/* Feature 4 */}
           <div className="bg-white/20 rounded-2xl shadow-lg hover:shadow-2xl p-6 text-center transition-all duration-300 hover:scale-105">
             <FaHandsHelping className="text-5xl text-pink-300 mx-auto mb-4" />
             <h3 className="font-semibold text-lg mb-2 text-white">Help & Get Help</h3>
@@ -74,7 +70,73 @@ const About = () => {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Testimonials Section */}
+      <div className="w-full py-16 px-6">
+        <h2 className="text-center text-3xl font-bold mb-10 text-yellow-300">
+          What People Say
+        </h2>
+
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+          {/* Testimonial 1 */}
+          <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src="https://i.pravatar.cc/100?img=12"
+                alt="Rohit"
+                className="w-10 h-10 rounded-full border-2 border-yellow-300"
+              />
+              <div>
+                <h4 className="font-semibold text-white">Rohit Sharma</h4>
+                <span className="text-xs text-gray-300">Student, Delhi</span>
+              </div>
+            </div>
+            <p className="text-gray-200 text-sm">
+              “I needed urgent help fixing my bike, and within minutes someone nearby responded.
+              This platform truly brings people together!”
+            </p>
+          </div>
+
+          {/* Testimonial 2 */}
+          <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src="https://i.pravatar.cc/100?img=32"
+                alt="Anjali"
+                className="w-10 h-10 rounded-full border-2 border-yellow-300"
+              />
+              <div>
+                <h4 className="font-semibold text-white">Anjali Verma</h4>
+                <span className="text-xs text-gray-300">Homemaker, Lucknow</span>
+              </div>
+            </div>
+            <p className="text-gray-200 text-sm">
+              “Help Yaar made it so easy to lend tools to my neighbors. It feels like
+              we’re building a real community again.”
+            </p>
+          </div>
+
+          {/* Testimonial 3 */}
+          <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src="https://i.pravatar.cc/100?img=45"
+                alt="Aman"
+                className="w-10 h-10 rounded-full border-2 border-yellow-300"
+              />
+              <div>
+                <h4 className="font-semibold text-white">Aman Khan</h4>
+                <span className="text-xs text-gray-300">Freelancer, Noida</span>
+              </div>
+            </div>
+            <p className="text-gray-200 text-sm">
+              “Simple, fast, and genuinely helpful. I’ve both received and offered help —
+              and every experience has been amazing.”
+            </p>
+          </div>
+        </div>
+      </div>
+      </div>
   );
 };
 
