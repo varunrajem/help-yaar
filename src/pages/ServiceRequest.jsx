@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../firebase";
 import {
@@ -8,6 +8,7 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  onSnapshot, // 🔥 REAL-TIME
 } from "firebase/firestore";
 
 /* ================= Reverse Geocoding ================= */
@@ -28,79 +29,33 @@ const reverseGeocodeCity = async (lat, lng) => {
         data.address?.city ||
         data.address?.town ||
         data.address?.village ||
-        ""
+        "",
     };
   } catch (err) {
-    console.error("OSM error:", err);
-    return {
-      displayName: "Unknown location",
-      district: "",
-      city: ""
-    };
+    console.error(err);
+    return { displayName: "", district: "", city: "" };
   }
 };
 
 /* ================= Fetch Helpers ================= */
 const getHelpersByCategoryAndLocation = async (category, city, district) => {
-  try {
-    const q = query(
-      collection(db, "helpers"),
-      where("service", "==", category)
-    );
+  const q = query(
+    collection(db, "helpers"),
+    where("service", "==", category)
+  );
 
-    const snapshot = await getDocs(q);
+  const snapshot = await getDocs(q);
 
-    const matchedHelpers = snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .filter((h) => {
-        if (!h.address) return false;
-
-        const address = h.address.toLowerCase();
-
-        return (
-          address.includes(city.toLowerCase()) ||
-          address.includes(district.toLowerCase())
-        );
-      });
-
-    return matchedHelpers;
-
-  } catch (error) {
-    console.error("Error fetching helpers:", error);
-    return [];
-  }
-};
-
-/* ================= Send Request ================= */
-const sendRequestToHelper = async (helper, user, category, coords) => {
-  if (!user) {
-    alert("Please login first");
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "requests"), {
-      helperEmail: helper.email, // 🔥 IMPORTANT
-      helperId: helper.id,
-      helperName: helper.name,
-
-      userId: user.uid,
-      userName: user.displayName || "User",
-      userPhone: user.phoneNumber || "",
-
-      service: category,
-      address: helper.address,
-      location: coords,
-
-      status: "pending",
-      createdAt: serverTimestamp(),
+  return snapshot.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .filter((h) => {
+      if (!h.address) return false;
+      const addr = h.address.toLowerCase();
+      return (
+        addr.includes(city.toLowerCase()) ||
+        addr.includes(district.toLowerCase())
+      );
     });
-
-    alert("✅ Request sent successfully!");
-  } catch (error) {
-    console.error("Error sending request:", error);
-    alert("Failed to send request.");
-  }
 };
 
 /* ================= MAIN COMPONENT ================= */
@@ -109,51 +64,92 @@ const ServiceRequest = () => {
   const user = auth.currentUser;
 
   const [coords, setCoords] = useState(null);
-  const [displayName, setDisplayName] = useState("");
   const [district, setDistrict] = useState("");
   const [city, setCity] = useState("");
-  const [availableHelpers, setAvailableHelpers] = useState([]);
+  const [helpers, setHelpers] = useState([]);
   const [showPopup, setShowPopup] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  /* ---------- Allow Location ---------- */
+  // 🔥 Track user requests
+  const [userRequests, setUserRequests] = useState({});
+
+  /* ================= REAL-TIME USER REQUESTS ================= */
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, "requests"),
+      where("userId", "==", user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const map = {};
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        map[data.helperEmail] = data.status;
+      });
+
+      setUserRequests(map);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  /* ================= SEND REQUEST ================= */
+  const sendRequestToHelper = async (helper) => {
+    if (!user) return alert("Please login first");
+
+    if (!helper?.email) {
+      alert("Helper email missing ❌");
+      return;
+    }
+
+    await addDoc(collection(db, "requests"), {
+      helperEmail: helper.email,
+      helperName: helper.name || "Helper",
+
+      userId: user.uid,
+      userEmail: user.email,
+      userName: user.displayName || "User",
+
+      service: categoryName,
+      address: helper.address || "",
+      location: coords || null,
+
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+
+    alert("Request sent!");
+  };
+
+  /* ================= LOCATION ================= */
   const handleAllowLocation = () => {
     setLoading(true);
     setShowPopup(false);
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const userCoords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const c = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      };
 
-        setCoords(userCoords);
+      setCoords(c);
 
-        const locationData = await reverseGeocodeCity(
-          userCoords.lat,
-          userCoords.lng
-        );
+      const loc = await reverseGeocodeCity(c.lat, c.lng);
+      setCity(loc.city);
+      setDistrict(loc.district);
 
-        setDisplayName(locationData.displayName);
-        setDistrict(locationData.district);
-        setCity(locationData.city);
+      const data = await getHelpersByCategoryAndLocation(
+        categoryName,
+        loc.city,
+        loc.district
+      );
 
-        const helpers = await getHelpersByCategoryAndLocation(
-          categoryName,
-          locationData.city,
-          locationData.district
-        );
-
-        setAvailableHelpers(helpers);
-        setLoading(false);
-      },
-      () => {
-        alert("Location access denied.");
-        setLoading(false);
-        setShowPopup(true);
-      }
-    );
+      setHelpers(data);
+      setLoading(false);
+    });
   };
 
   /* ================= UI ================= */
@@ -196,35 +192,46 @@ const ServiceRequest = () => {
               {categoryName} Helpers
             </h2>
 
-            {availableHelpers.length > 0 ? (
+            {helpers.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {availableHelpers.map((helper) => (
-                  <div
-                    key={helper.id}
-                    className="bg-white/20 p-5 rounded-xl"
-                  >
-                    <h3 className="font-bold">{helper.name}</h3>
-                    <p>{helper.address}</p>
+                {helpers.map((helper) => {
+                  const status = userRequests[helper.email];
 
-                    <button
-                      onClick={() =>
-                        sendRequestToHelper(
-                          helper,
-                          user,
-                          categoryName,
-                          coords
-                        )
-                      }
-                      className="mt-3 w-full bg-yellow-400 text-black py-2 rounded"
+                  return (
+                    <div
+                      key={helper.id}
+                      className="bg-white/20 backdrop-blur-md p-5 rounded-2xl 
+                      shadow-lg border border-white/20"
                     >
-                      Send Request
-                    </button>
-                  </div>
-                ))}
+                      <h2 className="font-bold text-lg mb-1">
+                        {helper.name}
+                      </h2>
+
+                      <p className="text-sm opacity-90">
+                        Service: {helper.service}
+                      </p>
+
+                      <p className="text-sm opacity-80 mt-1">
+                        {helper.address}
+                      </p>
+
+                      <button
+                        onClick={() => sendRequestToHelper(helper)}
+                        disabled={status === "pending"}
+                        className="mt-4 w-full bg-yellow-400 text-black py-3 
+                        rounded-xl font-semibold transition disabled:opacity-60"
+                      >
+                        {status === "pending"
+                          ? "Pending ⏳"
+                          : "Send Request"}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-center mt-10">
-                No helpers available nearby
+              <p className="mt-10 text-center text-lg">
+                No helpers available in your area.
               </p>
             )}
           </>

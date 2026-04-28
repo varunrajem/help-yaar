@@ -5,7 +5,7 @@ import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot, // 🔥 REAL-TIME
   doc,
   updateDoc,
   getDoc,
@@ -17,7 +17,7 @@ const HelperDashboard = () => {
 
   const [requests, setRequests] = useState([]);
   const [helper, setHelper] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // 🔥 Fetch helper profile
   const fetchHelper = async () => {
@@ -33,52 +33,50 @@ const HelperDashboard = () => {
     }
   };
 
-  // 🔥 Fetch requests
-  const fetchRequests = async () => {
-    try {
-      setLoading(true);
+  // 🔥 REAL-TIME REQUEST LISTENER
+  useEffect(() => {
+    if (!email) return;
 
-      const q = query(
-        collection(db, "requests"), // ✅ FIXED collection
-        where("helperEmail", "==", email)
-      );
+    fetchHelper();
 
-      const snapshot = await getDocs(q);
+    const q = query(
+      collection(db, "requests"),
+      where("helperEmail", "==", email)
+    );
 
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const list = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
       setRequests(list);
-    } catch (error) {
-      console.error(error);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
 
-  useEffect(() => {
-    if (email) {
-      fetchHelper();
-      fetchRequests();
-    }
+    return () => unsubscribe(); // cleanup
   }, [email]);
 
   // ✅ ACCEPT
   const acceptRequest = async (id) => {
-    await updateDoc(doc(db, "requests", id), {
-      status: "accepted",
-    });
-    fetchRequests();
+    try {
+      await updateDoc(doc(db, "requests", id), {
+        status: "accepted",
+      });
+    } catch (error) {
+      console.error("Accept error:", error);
+    }
   };
 
   // ❌ REJECT
   const rejectRequest = async (id) => {
-    await updateDoc(doc(db, "requests", id), {
-      status: "rejected",
-    });
-    fetchRequests();
+    try {
+      await updateDoc(doc(db, "requests", id), {
+        status: "rejected",
+      });
+    } catch (error) {
+      console.error("Reject error:", error);
+    }
   };
 
   return (
