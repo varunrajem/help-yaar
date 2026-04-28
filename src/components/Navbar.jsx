@@ -18,11 +18,9 @@ export const Navbar = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
 
-      // 🔥 Clear previous timer
       if (logoutTimer) clearTimeout(logoutTimer);
 
       if (currentUser) {
-        // ⏳ Auto logout after 1 minute
         logoutTimer = setTimeout(async () => {
           try {
             await signOut(auth);
@@ -30,7 +28,7 @@ export const Navbar = () => {
           } catch (error) {
             console.error("Auto logout error:", error);
           }
-        }, 600000); // change time here
+        }, 600000); // 10 min
       }
     });
 
@@ -40,7 +38,6 @@ export const Navbar = () => {
     };
   }, []);
 
-  // 🔥 Manual Logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -80,11 +77,21 @@ export const Navbar = () => {
             About Us
           </NavLink>
 
+          {/* 🔥 SHOW ONLY WHEN USER LOGGED IN */}
+          {user && (
+            <NavLink
+              to="/my-bookings"
+              className={({ isActive }) =>
+                `hover:text-teal-400 ${isActive ? 'text-teal-400' : 'text-gray-300'}`
+              }
+            >
+              My Bookings
+            </NavLink>
+          )}
+
           {/* 🔥 USER LOGIC */}
           {user ? (
             <div className="relative">
-
-              {/* 👤 USER NAME */}
               <button
                 onClick={openDialog}
                 className="flex items-center gap-2 hover:text-teal-400"
@@ -95,7 +102,6 @@ export const Navbar = () => {
                 </span>
               </button>
 
-              {/* 🔥 DROPDOWN */}
               {isDialogOpen && (
                 <div className="absolute right-0 mt-2 bg-white text-gray-800 rounded shadow-md w-32">
                   <button
@@ -106,7 +112,6 @@ export const Navbar = () => {
                   </button>
                 </div>
               )}
-
             </div>
           ) : (
             <NavLink
@@ -130,6 +135,13 @@ export const Navbar = () => {
 
           <NavLink to="/" className="block text-center py-2">Home</NavLink>
           <NavLink to="/about" className="block text-center py-2">About</NavLink>
+
+          {/* 🔥 MOBILE BOOKINGS */}
+          {user && (
+            <NavLink to="/my-bookings" className="block text-center py-2">
+              My Bookings
+            </NavLink>
+          )}
 
           {user ? (
             <>
