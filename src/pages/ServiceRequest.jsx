@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -8,7 +8,9 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
-  onSnapshot, // 🔥 REAL-TIME
+  onSnapshot,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 
 /* ================= Reverse Geocoding ================= */
@@ -61,6 +63,7 @@ const getHelpersByCategoryAndLocation = async (category, city, district) => {
 /* ================= MAIN COMPONENT ================= */
 const ServiceRequest = () => {
   const { categoryName } = useParams();
+  const navigate = useNavigate();
   const user = auth.currentUser;
 
   const [coords, setCoords] = useState(null);
@@ -70,7 +73,7 @@ const ServiceRequest = () => {
   const [showPopup, setShowPopup] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // 🔥 Track user requests
+  // 🔥 Store request status + ID
   const [userRequests, setUserRequests] = useState({});
 
   /* ================= REAL-TIME USER REQUESTS ================= */
@@ -85,9 +88,12 @@ const ServiceRequest = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const map = {};
 
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        map[data.helperEmail] = data.status;
+      snapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data();
+        map[data.helperEmail] = {
+          status: data.status,
+          id: docSnap.id,
+        };
       });
 
       setUserRequests(map);
@@ -98,30 +104,54 @@ const ServiceRequest = () => {
 
   /* ================= SEND REQUEST ================= */
   const sendRequestToHelper = async (helper) => {
-    if (!user) return alert("Please login first");
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please login first!");
+      navigate("/login");
+      return;
+    }
 
     if (!helper?.email) {
       alert("Helper email missing ❌");
       return;
     }
 
-    await addDoc(collection(db, "requests"), {
-      helperEmail: helper.email,
-      helperName: helper.name || "Helper",
+    try {
+      await addDoc(collection(db, "requests"), {
+        helperEmail: helper.email,
+        helperName: helper.name || "Helper",
 
-      userId: user.uid,
-      userEmail: user.email,
-      userName: user.displayName || "User",
+        userId: user.uid,
+        userEmail: user.email,
+        userName: user.displayName || "User",
 
-      service: categoryName,
-      address: helper.address || "",
-      location: coords || null,
+        service: categoryName,
+        address: helper.address || "",
+        location: coords || null,
 
-      status: "pending",
-      createdAt: serverTimestamp(),
-    });
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
 
-    alert("Request sent!");
+      alert("Request sent!");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  /* ================= CANCEL REQUEST ================= */
+  const cancelRequest = async (helperEmail) => {
+    const request = userRequests[helperEmail];
+
+    if (!request?.id) return;
+
+    try {
+      await deleteDoc(doc(db, "requests", request.id));
+      alert("Request cancelled ❌");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   /* ================= LOCATION ================= */
@@ -195,7 +225,8 @@ const ServiceRequest = () => {
             {helpers.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {helpers.map((helper) => {
-                  const status = userRequests[helper.email];
+                  const request = userRequests[helper.email];
+                  const status = request?.status;
 
                   return (
                     <div
@@ -215,16 +246,29 @@ const ServiceRequest = () => {
                         {helper.address}
                       </p>
 
-                      <button
-                        onClick={() => sendRequestToHelper(helper)}
-                        disabled={status === "pending"}
-                        className="mt-4 w-full bg-yellow-400 text-black py-3 
-                        rounded-xl font-semibold transition disabled:opacity-60"
-                      >
-                        {status === "pending"
-                          ? "Pending ⏳"
-                          : "Send Request"}
-                      </button>
+                      {/* 🔥 BUTTON LOGIC */}
+                      {!user ? (
+                        <button
+                          onClick={() => navigate("/login")}
+                          className="mt-4 w-full bg-gray-400 text-black py-3 rounded-xl"
+                        >
+                          Login Required 🔒
+                        </button>
+                      ) : status === "pending" ? (
+                        <button
+                          onClick={() => cancelRequest(helper.email)}
+                          className="mt-4 w-full bg-red-500 text-white py-3 rounded-xl font-semibold"
+                        >
+                          Cancel Request ❌
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => sendRequestToHelper(helper)}
+                          className="mt-4 w-full bg-yellow-400 text-black py-3 rounded-xl font-semibold"
+                        >
+                          Send Request
+                        </button>
+                      )}
                     </div>
                   );
                 })}

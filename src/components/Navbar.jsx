@@ -30,7 +30,7 @@ export const Navbar = () => {
           } catch (error) {
             console.error("Auto logout error:", error);
           }
-        }, 60000); // change time here
+        }, 600000); // change time here
       }
     });
 
