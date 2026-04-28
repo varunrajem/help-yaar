@@ -1,10 +1,12 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // import hook
+import { useNavigate } from "react-router-dom";
 import {
   FaTools, FaBook, FaMotorcycle, FaBolt, FaLaptopCode, FaPaintBrush,
   FaDumbbell, FaBroom, FaCar, FaBaby, FaUtensils, FaDog
 } from "react-icons/fa";
+
 import CategoryCard from "../components/CategoryCard";
+import Carousel from "../components/Carousel";
 
 const services = [
   { id: 1, name: "Plumbing", icon: <FaTools size={40} />, description: "Fix leaks and pipes" },
@@ -24,28 +26,48 @@ const services = [
 ];
 
 const Home = () => {
-  const navigate = useNavigate(); // initialize navigate
+  const navigate = useNavigate();
 
   const handleCategorySelect = (categoryName) => {
-    console.log("Selected category:", categoryName);
-    navigate(`/service/${categoryName}`); // now it will redirect
+    navigate(`/service/${categoryName}`);
   };
 
+  // 🔥 Carousel Images
+ const carouselImages = [
+  "/image.png",
+  "/image1.png",
+  "/image2.png",
+];
+
   return (
-    <div className="min-h-screen bg-gradient-to-tl from-green-400 via-blue-500 to-indigo-900 px-4 py-10 mt-12">
-      <div className="max-w-7xl mx-auto text-white">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {services.map((service) => (
-            <CategoryCard
-              key={service.id}
-              icon={service.icon}
-              name={service.name}
-              description={service.description}
-              onClick={() => handleCategorySelect(service.name)}
-            />
-          ))}
+    <div className="min-h-screen bg-gradient-to-tl from-green-400 via-blue-500 to-indigo-900 mt-12">
+
+      {/* 🔥 HERO CAROUSEL */}
+      <Carousel images={carouselImages} />
+
+      {/* 🔽 SERVICES SECTION */}
+      <div className="px-4 py-10">
+        <div className="max-w-7xl mx-auto text-white">
+
+          <h1 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+            Explore Services
+          </h1>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {services.map((service) => (
+              <CategoryCard
+                key={service.id}
+                icon={service.icon}
+                name={service.name}
+                description={service.description}
+                onClick={() => handleCategorySelect(service.name)}
+              />
+            ))}
+          </div>
+
         </div>
       </div>
+
     </div>
   );
 };
