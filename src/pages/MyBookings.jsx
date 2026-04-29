@@ -6,10 +6,21 @@ import {
   where,
   onSnapshot,
 } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const MyBookings = () => {
-  const user = auth.currentUser;
+  const navigate = useNavigate();
+  const [user, setUser] = useState(auth.currentUser);
   const [bookings, setBookings] = useState([]);
+
+  useEffect(() => {
+    // 🔥 Handle auth properly (important)
+    const unsubscribeAuth = auth.onAuthStateChanged((u) => {
+      setUser(u);
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -17,7 +28,7 @@ const MyBookings = () => {
     const q = query(
       collection(db, "requests"),
       where("userId", "==", user.uid),
-      where("status", "==", "accepted") // 🔥 ONLY ACCEPTED
+      where("status", "==", "accepted")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -39,7 +50,9 @@ const MyBookings = () => {
         📦 My Bookings
       </h1>
 
-      {bookings.length === 0 ? (
+      {!user ? (
+        <p>Please login to see your bookings</p>
+      ) : bookings.length === 0 ? (
         <p>No bookings yet</p>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -67,6 +80,15 @@ const MyBookings = () => {
               <p className="mt-2 text-green-400 font-semibold">
                 ✅ Accepted
               </p>
+
+              {/* 🔥 CHAT BUTTON */}
+              <button
+                onClick={() => navigate(`/chat/${b.id}`)}
+                className="mt-4 w-full bg-blue-500 py-2 rounded"
+              >
+                Chat 💬
+              </button>
+
             </div>
           ))}
         </div>

@@ -19,6 +19,7 @@ const BeHelper = lazy(() => import("./pages/BeHelper"));
 const HelperLogin = lazy(() => import("./pages/HelperLogin"));
 const HelperDashboard = lazy(() => import("./pages/HelperDashboard"));
 const MyBookings = lazy(() => import("./pages/MyBookings"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="/be-helper" element={<BeHelper />} />
             <Route path="/helper-login" element={<HelperLogin />} />
             <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/chat/:requestId" element={<ChatPage />} />
 
           </Route>
 

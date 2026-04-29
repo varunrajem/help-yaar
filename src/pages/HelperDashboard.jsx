@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import {
   collection,
   query,
   where,
-  onSnapshot, // 🔥 REAL-TIME
+  onSnapshot,
   doc,
   updateDoc,
   getDoc,
+  addDoc,
+  serverTimestamp,
+  getDocs, // 🔥 IMPORTANT
 } from "firebase/firestore";
 
 const HelperDashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const email = new URLSearchParams(location.search).get("email");
 
   const [requests, setRequests] = useState([]);
@@ -54,15 +58,40 @@ const HelperDashboard = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe(); // cleanup
+    return () => unsubscribe();
   }, [email]);
 
-  // ✅ ACCEPT
-  const acceptRequest = async (id) => {
+  // ✅ ACCEPT + SAFE CHAT CREATION
+  const acceptRequest = async (req) => {
     try {
-      await updateDoc(doc(db, "requests", id), {
+      // ✅ Update request status
+      await updateDoc(doc(db, "requests", req.id), {
         status: "accepted",
       });
+
+      // 🔥 Check if chat already exists
+      const q = query(
+        collection(db, "chats"),
+        where("requestId", "==", req.id)
+      );
+
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        console.log("Creating chat...");
+
+        await addDoc(collection(db, "chats"), {
+          requestId: req.id,
+          userId: req.userId,
+          helperEmail: req.helperEmail,
+          createdAt: serverTimestamp(),
+        });
+
+        console.log("Chat created ✅");
+      } else {
+        console.log("Chat already exists ⚠️");
+      }
+
     } catch (error) {
       console.error("Accept error:", error);
     }
@@ -139,7 +168,7 @@ const HelperDashboard = () => {
               </p>
 
               <p className="text-sm text-gray-400">
-                📞 {req.userPhone}
+                📞 {req.userPhone || "N/A"}
               </p>
 
               <p className="text-sm text-gray-400">
@@ -148,28 +177,40 @@ const HelperDashboard = () => {
 
               <p className="mt-2 text-sm">
                 Status:{" "}
-                <span className="font-semibold">
+                <span className="font-semibold capitalize">
                   {req.status}
                 </span>
               </p>
 
+              {/* 🔥 ACTION BUTTONS */}
               {req.status === "pending" && (
                 <div className="flex gap-3 mt-4">
                   <button
-                    onClick={() => acceptRequest(req.id)}
-                    className="flex-1 bg-green-600 py-1 rounded"
+                    onClick={() => acceptRequest(req)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 py-1 rounded"
                   >
                     Accept
                   </button>
 
                   <button
                     onClick={() => rejectRequest(req.id)}
-                    className="flex-1 bg-red-600 py-1 rounded"
+                    className="flex-1 bg-red-600 hover:bg-red-700 py-1 rounded"
                   >
                     Reject
                   </button>
                 </div>
               )}
+
+              {/* 🔥 CHAT BUTTON AFTER ACCEPT */}
+              {req.status === "accepted" && (
+                <button
+                  onClick={() => navigate(`/chat/${req.id}`)}
+                  className="mt-4 w-full bg-blue-500 hover:bg-blue-600 py-2 rounded"
+                >
+                  Chat 💬
+                </button>
+              )}
+
             </div>
           ))}
         </div>
