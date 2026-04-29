@@ -67,23 +67,32 @@ const HelpersList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-gray-100 p-6">
-      <h2 className="text-3xl font-bold mb-8 text-center">All Helpers</h2>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white p-6">
 
+      {/* HEADER */}
+      <h2 className="text-3xl font-bold mb-10 text-center tracking-wide">
+        All Helpers
+      </h2>
+
+      {/* GRID */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
         {helpers.map((helper) => (
           <div
             key={helper.id}
-            className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 text-center shadow-lg hover:shadow-2xl hover:scale-[1.03] transition duration-300"
           >
+
             {editingId === helper.id ? (
-              <div className="p-5">
+              // ✏️ EDIT MODE (Premium Form)
+              <div className="space-y-3">
+
                 <input
                   value={editData.name}
                   onChange={(e) =>
                     setEditData({ ...editData, name: e.target.value })
                   }
-                  className="w-full mb-2 p-2 rounded bg-gray-800"
+                  className="w-full p-2 rounded-xl bg-gray-800 border border-gray-700 focus:outline-none"
                   placeholder="Name"
                 />
 
@@ -92,7 +101,7 @@ const HelpersList = () => {
                   onChange={(e) =>
                     setEditData({ ...editData, email: e.target.value })
                   }
-                  className="w-full mb-2 p-2 rounded bg-gray-800"
+                  className="w-full p-2 rounded-xl bg-gray-800 border border-gray-700"
                   placeholder="Email"
                 />
 
@@ -101,7 +110,7 @@ const HelpersList = () => {
                   onChange={(e) =>
                     setEditData({ ...editData, phone: e.target.value })
                   }
-                  className="w-full mb-2 p-2 rounded bg-gray-800"
+                  className="w-full p-2 rounded-xl bg-gray-800 border border-gray-700"
                   placeholder="Phone"
                 />
 
@@ -110,7 +119,7 @@ const HelpersList = () => {
                   onChange={(e) =>
                     setEditData({ ...editData, service: e.target.value })
                   }
-                  className="w-full mb-2 p-2 rounded bg-gray-800"
+                  className="w-full p-2 rounded-xl bg-gray-800 border border-gray-700"
                   placeholder="Service"
                 />
 
@@ -119,7 +128,7 @@ const HelpersList = () => {
                   onChange={(e) =>
                     setEditData({ ...editData, address: e.target.value })
                   }
-                  className="w-full mb-2 p-2 rounded bg-gray-800"
+                  className="w-full p-2 rounded-xl bg-gray-800 border border-gray-700"
                   placeholder="Address"
                 />
 
@@ -127,20 +136,20 @@ const HelpersList = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full mb-2 text-sm"
+                  className="text-sm"
                 />
 
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 pt-2">
                   <button
                     onClick={saveEdit}
-                    className="bg-green-600 px-3 py-1 rounded"
+                    className="flex-1 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90"
                   >
                     Save
                   </button>
 
                   <button
                     onClick={() => setEditingId(null)}
-                    className="bg-gray-600 px-3 py-1 rounded"
+                    className="flex-1 py-2 rounded-xl bg-gray-700 hover:bg-gray-600"
                   >
                     Cancel
                   </button>
@@ -148,65 +157,58 @@ const HelpersList = () => {
               </div>
             ) : (
               <>
-                {/* Image Section */}
-                <div className="relative">
-                  <div className="w-full h-48 bg-gray-800 overflow-hidden rounded-[40px] m-3">
-                    {helper.image ? (
-                      <img
-                        src={helper.image}
-                        alt="helper"
-                        className="w-full h-full object-cover object-center hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500">
-                        No Image
-                      </div>
-                    )}
+                {/* AVATAR */}
+                <div className="flex justify-center mb-4">
+                  <div className="p-[2px] rounded-full bg-gradient-to-r from-blue-500 to-purple-500">
+                    <img
+                      src={helper.image || "/default-user.png"}
+                      alt="helper"
+                      className="w-24 h-24 rounded-full object-cover bg-gray-800"
+                    />
                   </div>
-
-                  {/* Profile Avatar */}
-                  {helper.image && (
-                    <div className="absolute -bottom-6 left-6">
-                      <img
-                        src={helper.image}
-                        alt="profile"
-                        className="w-14 h-14 rounded-full border-4 border-gray-900 object-cover shadow-md"
-                      />
-                    </div>
-                  )}
                 </div>
 
-                {/* Content */}
-                <div className="p-5 pt-8">
-                  <h3 className="text-xl font-semibold mb-1">
-                    {helper.name}
-                  </h3>
+                {/* NAME */}
+                <h3 className="text-lg font-semibold">
+                  {helper.name}
+                </h3>
 
-                  <p className="text-sm text-gray-400">📧 {helper.email}</p>
-                  <p className="text-sm text-gray-400">📞 {helper.phone}</p>
-                  <p className="text-sm text-gray-400">🛠 {helper.service}</p>
-                  <p className="text-sm text-gray-400">📍 {helper.address}</p>
+                {/* SERVICE */}
+                <p className="text-xs text-blue-400 mt-1 mb-3 uppercase tracking-wider">
+                  {helper.service}
+                </p>
 
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      onClick={() => startEdit(helper)}
-                      className="bg-blue-600 hover:bg-blue-700 px-4 py-1 rounded-lg text-sm"
-                    >
-                      Edit
-                    </button>
+                {/* INFO */}
+                <div className="text-sm text-gray-400 space-y-1 mb-4">
+                  <p>{helper.email}</p>
+                  <p>{helper.phone}</p>
+                  <p className="text-gray-500 text-xs">
+                    {helper.address}
+                  </p>
+                </div>
 
-                    <button
-                      onClick={() => deleteHelper(helper.id)}
-                      className="bg-red-600 hover:bg-red-700 px-4 py-1 rounded-lg text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                {/* ACTIONS */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => startEdit(helper)}
+                    className="flex-1 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => deleteHelper(helper.id)}
+                    className="flex-1 py-2 rounded-xl bg-gradient-to-r from-red-500 to-pink-600 hover:opacity-90"
+                  >
+                    Delete
+                  </button>
                 </div>
               </>
             )}
+
           </div>
         ))}
+
       </div>
     </div>
   );
