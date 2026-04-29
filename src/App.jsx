@@ -47,11 +47,11 @@ function App() {
 
           </Route>
 
-          {/* ✅ Admin Login (NO sidebar) */}
+          {/* Admin Login (NO sidebar) */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/helper-dashboard" element={<HelperDashboard />} />
 
-          {/* ✅ Admin Layout (WITH sidebar) */}
+          {/* Admin Layout (WITH sidebar) */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="verify-helpers" element={<VerifyHelpers />} />
