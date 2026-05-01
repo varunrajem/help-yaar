@@ -8,6 +8,7 @@ import AdminLogin from "./Admin/AdminLogin";
 import AdminDashboard from "./Admin/AdminDashboard";
 import VerifyHelpers from "./Admin/VerifyHelpers";
 import HelpersList from "./Admin/HelpersList";
+import AdminRoute from "./Admin/AdminRoute";
 
 // Lazy imports
 const Home = lazy(() => import("./pages/Home"));
@@ -33,7 +34,7 @@ function App() {
       >
         <Routes>
 
-          {/* Main Website */}
+          {/* 🌐 Main Website */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -44,18 +45,26 @@ function App() {
             <Route path="/helper-login" element={<HelperLogin />} />
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/chat/:requestId" element={<ChatPage />} />
-
           </Route>
 
-          {/* Admin Login (NO sidebar) */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* 👨‍🔧 Helper Dashboard */}
           <Route path="/helper-dashboard" element={<HelperDashboard />} />
 
-          {/* Admin Layout (WITH sidebar) */}
-          <Route path="/admin" element={<AdminLayout />}>
+          {/* 🔑 Admin Login */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* 🔐 Protected Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="verify-helpers" element={<VerifyHelpers />} />
-            <Route path="/admin/helpers" element={<HelpersList />} />
+            <Route path="helpers" element={<HelpersList />} />
           </Route>
 
         </Routes>
